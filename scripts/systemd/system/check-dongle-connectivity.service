@@ -1,0 +1,14 @@
+[Unit]
+Description=Comprueba la conectividad a internet a través del dongle
+After=network.target sys-subsystem-net-devices-usb0.device
+BindsTo=sys-subsystem-net-devices-usb0.device
+OnFailure=reboot-dongle.service
+
+[Service]
+RemainAfterExit=no
+ExecStart=/usr/local/bin/is-connected-to-internet
+PIDFile=/var/run/pid/check-dongle-conectivity.pid
+ExecStop=/usr/bin/pkill -15 /var/run/pid/check-dongle-conectivity.pid
+
+[Install]
+WantedBy=sys-subsystem-net-devices-usb0.device

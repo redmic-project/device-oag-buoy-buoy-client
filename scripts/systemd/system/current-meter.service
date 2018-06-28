@@ -1,0 +1,15 @@
+[Unit]
+Description=Current Meter
+After=multi-user.target dev-current_meter.device
+BindsTo=dev-current_meter.device
+
+[Service]
+Type=idle
+ExecStart=/usr/local/bin/current-meter
+PIDFile=/var/run/buoy/current-meter.pid
+ExecStop=/usr/bin/pkill -15 /var/run/buoy/current-meter.pid
+TimeoutStopSec=5
+Restart=on-failure
+
+[Install]
+WantedBy=dev-current_meter.device

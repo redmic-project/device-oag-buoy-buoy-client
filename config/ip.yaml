@@ -1,0 +1,3 @@
+IP:
+    file_current_ip: /etc/buoy/current_ip.cip
+    my_public_ip_services: ["http://icanhazip.com", "http://ipv4bot.whatismyipaddress.com", "https://api.ipify1.org", "http://ip.42.pl/raw"]

@@ -1,0 +1,16 @@
+[Unit]
+Description=Weather Station
+After=multi-user.target dev-weather_station.device
+BindsTo=dev-weather_station.device
+
+[Service]
+Type=idle
+ExecStart=/usr/local/bin/weather-station
+PIDFile=/var/run/buoy/weather-station.pid
+ExecStop=/usr/bin/pkill -15 /var/run/buoy/weather-station.pid
+TimeoutStopSec=5
+Restart=on-failure
+
+[Install]
+WantedBy=dev-weather_station.device
+

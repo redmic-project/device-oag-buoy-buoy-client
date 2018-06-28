@@ -1,0 +1,48 @@
+service:
+    path_pidfile: ./test/logs/
+    path_reboot_files: ./test/logs/lifecycle
+
+database:
+    database: boyadb
+    user: username
+    password: password
+    host: localhost
+
+connection:
+    check:
+        start_timeout: 60
+        # Intervalo de tiempo en segundos entre comprabación y comprabación de la conexión a internet
+        time: 600
+        # Número de intentos de hacer ping a la ip, en caso de no tener respuesta
+        num_attempts: 3
+        # Tiempo a transcurrir entre intentos, sin respuesta. Tiempo entre pìng y ping
+        time_between_attempts: 10
+        ip: "8.8.8.8"
+    modem:
+        ip: "192.168.3.1"
+
+device:
+    PB200:
+        serial:
+            port: /dev/ttyUSB0
+            baudrate: 4800
+            stopbits: 1
+            parity: N
+            bytesize: 8
+            timeout: 0
+
+        mqtt:
+            broker_url: "iot.eclipse.org"
+            topic_data: "redmic/buoy/granadilla/pb200"
+
+    ACMPlus:
+        serial:
+            port: /dev/ttyUSB0
+            baudrate: 115200
+            stopbits: 1
+            parity: N
+            bytesize: 8
+
+        mqtt:
+            broker_url: "iot.eclipse.org"
+            topic_data: "redmic/buoy/granadilla/acmplus"

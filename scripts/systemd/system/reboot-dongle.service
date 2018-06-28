@@ -1,0 +1,7 @@
+[Unit]
+Description=Reinicia el dongle
+After=sys-subsystem-net-devices-usb0.device
+OnFailure=reboot-computer.service
+
+[Service]
+ExecStart=/usr/local/bin/zte-reboot

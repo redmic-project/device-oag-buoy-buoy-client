@@ -1,0 +1,19 @@
+#!/bin/bash
+
+name="192.168.3.1"
+port="23"
+user="root"
+pass="zte9x15"
+connectTimeout="5"
+cmd="shutdown -r -t 1 now 'Rebooting dongle...'"
+
+(
+	sleep 1
+	echo ${user}
+	sleep 1
+	echo ${pass}
+	sleep 1
+	echo ${cmd}
+	echo "exit"
+	sleep 1
+) | nc -v -w ${connectTimeout} ${name} ${port}

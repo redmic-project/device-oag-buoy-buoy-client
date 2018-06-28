@@ -1,0 +1,17 @@
+image: docker:latest
+services:
+  - docker:dind
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip-cache"
+
+stages:
+  - test
+
+testing:
+  image: redmic/python-postgres
+  stage: test
+  before_script:
+    - pip3 install -r requirements.txt
+  script:
+    - su -c nosetests gitlab
