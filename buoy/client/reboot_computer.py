@@ -11,7 +11,7 @@ DAEMON_NAME = 'reboot-computer'
 
 
 def run(config_buoy: str, config_log_file: str):
-    logging.config.dictConfig(load_config.load_config_logger(DAEMON_NAME, path_config=config_log_file))
+    logging.config.dictConfig(load_config.load_config_logger(path_config=config_log_file))
     config = load_config.load_config(path_config=config_buoy)
     path_reboot_files = config['service']['path_reboot_files']
 

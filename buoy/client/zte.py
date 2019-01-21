@@ -21,7 +21,7 @@ def is_need_reboot(path_reboot_files: str):
 
 
 def run_zte_reboot(config_buoy: str, config_log_file: str):
-    logging.config.dictConfig(load_config.load_config_logger(DAEMON_NAME, path_config=config_log_file))
+    logging.config.dictConfig(load_config.load_config_logger(path_config=config_log_file))
     config = load_config.load_config(path_config=config_buoy)
     path_reboot_files = config['service']['path_reboot_files']
 
@@ -39,13 +39,13 @@ def run_zte_reboot(config_buoy: str, config_log_file: str):
 
 
 def run_zte_connect(config_log_file: str):
-    logging.config.dictConfig(load_config.load_config_logger(DAEMON_NAME, path_config=config_log_file))
+    logging.config.dictConfig(load_config.load_config_logger(path_config=config_log_file))
 
     connect_network()
 
 
 def run_zte_disconnect(config_log_file: str):
-    logging.config.dictConfig(load_config.load_config_logger(DAEMON_NAME, path_config=config_log_file))
+    logging.config.dictConfig(load_config.load_config_logger(path_config=config_log_file))
 
     disconnect_network()
 

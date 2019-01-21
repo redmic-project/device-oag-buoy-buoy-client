@@ -52,7 +52,7 @@ class IsInternetConectionDaemon(Daemon):
 
 
 def run(config: str, config_log_file: str):
-    logging.config.dictConfig(load_config.load_config_logger(DAEMON_NAME, path_config=config_log_file))
+    logging.config.dictConfig(load_config.load_config_logger(path_config=config_log_file))
     buoy_config = load_config.load_config(path_config=config)
 
     daemon = IsInternetConectionDaemon(name=DAEMON_NAME, config=buoy_config)

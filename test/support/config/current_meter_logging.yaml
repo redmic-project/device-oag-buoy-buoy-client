@@ -12,7 +12,14 @@ handlers:
         level: INFO
         formatter: simple
         stream: ext://sys.stdout
+    file:
+        class: logging.handlers.TimedRotatingFileHandler
+        level: INFO
+        formatter: detail
+        when: midnight
+        backupCount: 4
+        filename: ./logs/current_meter.log
 
 root:
     level: INFO
-    handlers: [console]
+    handlers: [console, file]

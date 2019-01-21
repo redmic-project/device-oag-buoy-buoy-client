@@ -35,7 +35,7 @@ class BaseDBGetItemsTests(unittest.TestCase):
 
         close_db()
 
-    def test_should_return15Items_when_getItemsToSend(self):
+    def est_should_return15Items_when_getItemsToSend(self):
         db_conf = prepare_db()
         apply_sql_file('test/support/data/data_example.sql')
 
