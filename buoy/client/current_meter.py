@@ -29,7 +29,7 @@ class CurrentMeterDaemon(ACMPlus, Daemon):
 
 
 def run(config_buoy: str, config_log_file: str):
-    logging.config.dictConfig(load_config.load_config_logger(DAEMON_NAME, path_config=config_log_file))
+    logging.config.dictConfig(load_config.load_config_logger(path_config=config_log_file))
     buoy_config = load_config.load_config(path_config=config_buoy)
 
     daemon = CurrentMeterDaemon(name=DEVICE_NAME, buoy_config=buoy_config)
