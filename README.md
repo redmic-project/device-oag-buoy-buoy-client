@@ -1,9 +1,7 @@
-
-
 |    Metrics    |                                                                                     Master                                                                                     |                                                                                  Develop                                                                                 |
 |:-------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| CI status     | [![pipeline status](https://gitlab.com/redmic-project/device/oag-buoy/buoy-client/badges/master/pipeline.svg)](https://gitlab.com/redmic-project/device/oag-buoy/buoy-client/commits/master) | [![pipeline status](https://gitlab.com/redmic-project/device/oag-buoy/buoy-client/badges/master/pipeline.svg)](https://gitlab.com/redmic-project/device/oag-buoy/buoy-client/commits/dev)  |
-| Test coverage | [![coverage report](https://gitlab.com/redmic-project/device/oag-buoy/buoy-client/badges/master/coverage.svg)](https://gitlab.com/redmic-project/device/oag-buoy/buoy-client/commits/master) | [![coverage report](https://gitlab.com/redmic-project/device/oag-buoy/buoy-client/badges/master/coverage.svg)](https://gitlab.com/redmic-project/device/oag-buoy/buoy-client/commits/dev) |
+| CI status     | [![pipeline status](https://gitlab.com/redmic-project/device/oag-buoy/buoy-client/badges/master/pipeline.svg)](https://gitlab.com/redmic-project/device/oag-buoy/buoy-client/commits/master) | [![pipeline status](https://gitlab.com/redmic-project/device/oag-buoy/buoy-client/badges/dev/pipeline.svg)](https://gitlab.com/redmic-project/device/oag-buoy/buoy-client/commits/dev)  |
+| Test coverage | [![coverage report](https://gitlab.com/redmic-project/device/oag-buoy/buoy-client/badges/master/coverage.svg)](https://gitlab.com/redmic-project/device/oag-buoy/buoy-client/commits/master) | [![coverage report](https://gitlab.com/redmic-project/device/oag-buoy/buoy-client/badges/dev/coverage.svg)](https://gitlab.com/redmic-project/device/oag-buoy/buoy-client/commits/dev) |
 
 
 # Boya
