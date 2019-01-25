@@ -7,13 +7,12 @@ https://github.com/pypa/sampleproject
 # Always prefer setuptools over distutils
 from os import path
 
-from pypandoc import convert_text
 from setuptools import setup, find_packages
 
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
-long_description = convert_text(path.join(here, 'README.md'), to='rst', format='md')
+
 
 setup(
     name='Buoy-Client',
@@ -24,7 +23,7 @@ setup(
     version='0.0.2',
 
     description='Scientific buoy - Multidevice',
-    long_description=long_description,
+    long_description='Scientific buoy - Multidevice',
 
     # The project's main homepage.
     url='http://git.redmic.net/oag/buoy',
@@ -76,7 +75,7 @@ setup(
                       'pynmea2', 'configparser', 'pyyaml', 'mypy',
                       'jsonpickle', 'python-dateutil', 'paho-mqtt',
                       'psycopg2'],
-    setup_requires=['pytest-runner'],
+    setup_requires=['pytest-runner', 'wheel'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
