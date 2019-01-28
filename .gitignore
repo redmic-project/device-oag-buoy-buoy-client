@@ -2,6 +2,7 @@ logs/
 .idea/
 Buoy.iml
 cover/
+test/support/pids
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
