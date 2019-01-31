@@ -181,10 +181,17 @@ class ItemSendThread(BaseThread):
         self.connected_to_mqtt = False
         self.connected_to_internet = False
 
-        self.client = mqtt.Client()
         self.thread_mqtt = None
         self.broker_url = kwargs.pop("broker_url", "iot.eclipse.org")
-        self.topic_data = kwargs.pop("topic_data", "redmic/pb200")
+        self.broker_port = kwargs.pop("broker_port", 1883)
+        self.topic_data = kwargs.pop("topic_data", "buoy")
+        self.client_id = kwargs.pop("client_id", "")
+        self.client = mqtt.Client(client_id=self.client_id)
+        if "username" in kwargs:
+            self.username = kwargs.pop("username", "username")
+            self.password = kwargs.pop("password", None)
+            self.client.username_pw_set(self.username, self.password)
+
         self.qos = kwargs.pop("qos", 0)
         self.item_in_queue = set()
 
@@ -200,9 +207,9 @@ class ItemSendThread(BaseThread):
                     self.add_item_in_queue(item)
                     self.send(item)
             elif is_connected_to_internet(max_attempts=1, time_between_attempts=1):
-                logger.info("Connected to internet")
+                logger.debug("Connected to internet")
                 try:
-                    self.client.connect(self.broker_url, 1883, 60)
+                    self.client.connect(self.broker_url, self.broker_port, 60)
                     self.client.on_connect = self.on_connect
                     self.client.on_disconnect = self.on_disconnect
                     self.thread_mqtt = Thread(target=loop, args=(self.client,))
