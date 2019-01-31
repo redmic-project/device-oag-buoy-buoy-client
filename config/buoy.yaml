@@ -34,9 +34,11 @@ device:
             timeout: 0
 
         mqtt:
-            broker_url: "iot.eclipse.org"
-            topic_data: "redmic/buoy/granadilla/pb200"
-            qos: 0
+            broker_url: redmic.net
+            client_id: granadilla-buoy-weather-station
+            topic_data: redmic/activity/1284
+            username: username
+            password: changeme
 
     ACMPlus:
         serial:
@@ -48,6 +50,8 @@ device:
             timeout: 0
 
         mqtt:
-            broker_url: "iot.eclipse.org"
-            topic_data: "redmic/buoy/granadilla/acmplus"
-            qos: 0
+            broker_url: redmic.net
+            client_id: granadilla-buoy-current-meter
+            topic_data: redmic/activity/1286
+            username: username
+            password: changeme
