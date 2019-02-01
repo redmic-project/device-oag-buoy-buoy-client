@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 from nose.tools import eq_
 from serial import SerialException
 
-from buoy.client.device.common.base import DeviceReader, DeviceNoDetectedException
+from buoy.client.device.common.base import DeviceReader
 from buoy.client.notification.client.common import NoticePriorityQueue
 
 serial_config = {

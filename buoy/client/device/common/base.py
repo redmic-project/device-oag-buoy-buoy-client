@@ -48,6 +48,7 @@ class BaseThread(Thread):
     def stop(self):
         """ Para el hilo """
         self.active = False
+        logging.info("Stop thread %s", self.__class__.__name__)
 
     def error(self, exception):
         self.queue_notice.put_nowait(exception)
@@ -180,13 +181,19 @@ class ItemSendThread(BaseThread):
         self.queue_notice = queue_notice
         self.connected_to_mqtt = False
         self.connected_to_internet = False
-
         self.thread_mqtt = None
+        self.attemp_connect = False
+
+        self.client_id = kwargs.pop("client_id", "")
+        self.clean_session = kwargs.pop("clean_session", True)
+        self.protocol = mqtt.MQTTv311
+        self.transport = kwargs.pop("transport", "tcp")
+
         self.broker_url = kwargs.pop("broker_url", "iot.eclipse.org")
         self.broker_port = kwargs.pop("broker_port", 1883)
         self.topic_data = kwargs.pop("topic_data", "buoy")
-        self.client_id = kwargs.pop("client_id", "")
-        self.client = mqtt.Client(client_id=self.client_id)
+
+        self.client = mqtt.Client(client_id=self.client_id, protocol=self.protocol, clean_session=self.clean_session)
         if "username" in kwargs:
             self.username = kwargs.pop("username", "username")
             self.password = kwargs.pop("password", None)
@@ -207,13 +214,15 @@ class ItemSendThread(BaseThread):
                     self.add_item_in_queue(item)
                     self.send(item)
             elif is_connected_to_internet(max_attempts=1, time_between_attempts=1):
-                logger.debug("Connected to internet")
+                logger.info("Connected to internet")
                 try:
-                    self.client.connect(self.broker_url, self.broker_port, 60)
-                    self.client.on_connect = self.on_connect
-                    self.client.on_disconnect = self.on_disconnect
-                    self.thread_mqtt = Thread(target=loop, args=(self.client,))
-                    self.thread_mqtt.start()
+                    if not self.attemp_connect:
+                        self.attemp_connect = True
+                        self.client.connect(self.broker_url, self.broker_port, 60)
+                        self.client.on_connect = self.on_connect
+                        self.client.on_disconnect = self.on_disconnect
+                        self.thread_mqtt = Thread(target=loop, args=(self.client,))
+                        self.thread_mqtt.start()
                 except Exception as ex:
                     logger.warning("Connecting to broker, but not internet connection")
                     pass
@@ -248,7 +257,7 @@ class ItemSendThread(BaseThread):
 
     def send(self, item):
         # TODO Contemplar el caso de que no haya datos
-        logger.info("Publish data '%s' to topic '%s'," % (self.topic_data, str(item.to_json())))
+        logger.info("Publish data '%s' to topic '%s'" % (self.topic_data, str(item.to_json())))
         result = self.client.publish(self.topic_data, str(item.to_json()), qos=self.qos)
 
         # TODO sustituir por un callback
@@ -265,20 +274,37 @@ class ItemSendThread(BaseThread):
             self.db.set_failed(item.id)
 
     def on_connect(self, client, userdata, flags, rc):
-        logger.info("Connected to broker %s", self.broker_url)
-        self.connected_to_mqtt = True
+        if rc == 0:
+            logger.info("Connected to broker %s with client_id %s", self.broker_url, client)
+            self.connected_to_mqtt = True
+            if flags["session present"]:
+                logger.info("Connected to broker using existing session")
+            else:
+                logger.info("Connected to broker using clean session")
+        else:
+            self.connected_to_mqtt = False
+            if rc == 1:
+                logger.error("Connection refused - incorrect protocol version")
+            elif rc == 2:
+                logger.error("Connection refused - invalid client identifier")
+            elif rc == 3:
+                logger.error("Connection refused - server unavailable")
+            elif rc == 4:
+                logger.error("Connection refused - bad username or password")
+            elif rc == 5:
+                logger.error("Connection refused - not authorised")
+            else:
+                logger.error("Error connected to broker")
 
-    def on_disconnect(self, client, userdata, rc=0):
-        logger.info("Disconnected result code " + str(rc))
+    def on_disconnect(self, client, userdata, rc):
         self.connected_to_mqtt = False
-        if not self.is_active():
-            client.loop_stop()
+        client.loop_stop()
+        super().stop()
+        logger.info("Disconnected to broker with result code %s" % str(rc))
 
     def stop(self):
         logger.info("Disconnecting to broker")
-        super().stop()
         self.client.disconnect()
-        logger.info("Disconnected to broker")
 
 
 class Device(object):
@@ -370,7 +396,7 @@ class Device(object):
                 pass
 
     def disconnect(self):
-        logger.info("Disconnect to device")
+        logger.info("Disconnecting to device")
         self._stop_threads()
         if self.is_open():
             self._dev_connection.close()
@@ -380,7 +406,7 @@ class Device(object):
         self._run_action_threads(action='stop')
 
     def is_open(self):
-        return self._dev_connection and self._dev_connection.is_open
+        return self._dev_connection and self._dev_connection.is_open and self.is_active()
 
     def write(self, data):
         self.queues['write_data'].put_nowait(data + "\r")
