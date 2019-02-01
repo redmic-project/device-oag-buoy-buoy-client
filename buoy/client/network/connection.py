@@ -13,7 +13,7 @@ def is_connected_to_internet(max_attempts=3, time_between_attempts=2, ip='8.8.8.
     connected = False
     for i in range(max_attempts):
         try:
-            check_call(['ping', '-c', '1', ip, '-W', timeout], stdout=DEVNULL, stderr=STDOUT)
+            check_call(['/bin/ping', '-c', '1', ip, '-W', timeout], stdout=DEVNULL, stderr=STDOUT)
             connected = True
             break
         except CalledProcessError:
