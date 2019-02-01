@@ -74,7 +74,8 @@ class Daemon(PID):
 
     def handler_signal(self, signum, frame):
         """ Maneja la captura de señales de interrupción, poniendo el servicio en modo inactivo """
-        self._active = False
+        logging.info("Received signal 15")
+        self.stop()
 
     def _before_start(self):
         self._active = True
@@ -112,11 +113,10 @@ class Daemon(PID):
         pass
 
     def _stop(self, code=EX_OK):
-        if self.is_active():
-            self._active = False
-            self._before_stop()
-            self.remove_pid_file()
-            sys.exit(code)
+        self._active = False
+        self._before_stop()
+        self.remove_pid_file()
+        sys.exit(code)
 
     def stop(self):
         logger.info("Stop service")
