@@ -213,7 +213,7 @@ class ItemSendThread(BaseThread):
                 for item in items:
                     self.add_item_in_queue(item)
                     self.send(item)
-            elif is_connected_to_internet(max_attempts=1, time_between_attempts=5):
+            elif is_connected_to_internet(max_attempts=1, time_between_attempts=1):
                 logger.info("Connected to internet")
                 try:
                     if not self.attemp_connect:
@@ -227,7 +227,7 @@ class ItemSendThread(BaseThread):
                     logger.warning("Connecting to broker, but not internet connection")
                     pass
 
-            time.sleep(1)
+            time.sleep(self.timeout_wait)
 
     def waiting_data(self) -> List[BaseItem]:
         """

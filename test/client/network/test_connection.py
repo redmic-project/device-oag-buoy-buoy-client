@@ -6,23 +6,29 @@ from nose.tools import eq_
 
 from buoy.client.network import connection
 
+path_ping = '/bin/ping'
+
 
 class TestConnectionInternet(unittest.TestCase):
     def setUp(self):
         pass
 
-    @patch.object(connection, 'check_call', side_effect=CalledProcessError(1, 'ping'))
+    @patch.object(connection, 'check_call', side_effect=CalledProcessError(1, path_ping))
     def test_internet_conection_fail(self, mock_method):
         max_attempts = 5
 
         eq_(False, connection.is_connected_to_internet(max_attempts=max_attempts, time_between_attempts=1))
         eq_(mock_method.call_count, max_attempts)
 
-    @patch.object(connection, 'check_call', side_effect=[CalledProcessError(1, 'ping'), CalledProcessError(1, 'ping'),
-                                                         CalledProcessError(1, 'ping'), CalledProcessError(1, 'ping'),
-                                                         CalledProcessError(1, 'ping'), CalledProcessError(1, 'ping'),
-                                                         CalledProcessError(1, 'ping'), CalledProcessError(1, 'ping'),
-                                                         CalledProcessError(1, 'ping'), 0])
+    @patch.object(connection, 'check_call', side_effect=[CalledProcessError(1, path_ping),
+                                                         CalledProcessError(1, path_ping),
+                                                         CalledProcessError(1, path_ping),
+                                                         CalledProcessError(1, path_ping),
+                                                         CalledProcessError(1, path_ping),
+                                                         CalledProcessError(1, path_ping),
+                                                         CalledProcessError(1, path_ping),
+                                                         CalledProcessError(1, path_ping),
+                                                         CalledProcessError(1, path_ping), 0])
     def test_internet_conection_return_ok_after_various_fails(self, mock_method):
         max_attempts = 10
 
