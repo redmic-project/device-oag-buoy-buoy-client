@@ -388,7 +388,7 @@ class Device(object):
         pass
 
     def _listener_exceptions(self):
-        while self.is_open() and self.is_active():
+        while self.is_open():
             try:
                 ex = self.queues['notice'].get(timeout=0.2)
                 raise ex
@@ -406,7 +406,7 @@ class Device(object):
         self._run_action_threads(action='stop')
 
     def is_open(self):
-        return self._dev_connection and self._dev_connection.is_open
+        return self._dev_connection and self._dev_connection.is_open and self.is_active()
 
     def write(self, data):
         self.queues['write_data'].put_nowait(data + "\r")
