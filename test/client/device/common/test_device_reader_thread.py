@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 from nose.tools import eq_
 from serial import SerialException
 
+from buoy.client.device.common.exceptions import ProcessDataExecption
 from buoy.client.device.common.base import DeviceReader
 from buoy.client.notification.client.common import NoticePriorityQueue
 
@@ -21,11 +22,19 @@ serial_config = {
 device = MagicMock()
 
 
+class DeviceReaderMock(DeviceReader):
+    def __init__(self, **kwargs):
+        super(DeviceReaderMock, self).__init__(**kwargs)
+
+    def parser(self, data):
+        return data
+
+
 class TestItemReaderThread(unittest.TestCase):
     def setUp(self):
         self.queue_save_data = Queue()
         self.queue_notice = NoticePriorityQueue()
-        self.thread = DeviceReader(queue_save_data=self.queue_save_data, queue_notice=self.queue_notice, device=device)
+        self.thread = DeviceReaderMock(queue_save_data=self.queue_save_data, queue_notice=self.queue_notice, device=device)
 
     def test_returnTwoItems_when_passStringWith3CarriageReturnAndWhiteSpace(self):
         text = """hola
@@ -79,6 +88,34 @@ class TestItemReaderThread(unittest.TestCase):
         self.thread.active = True
         self.thread.activity()
         eq_(mock_error.call_count, 1)
+
+    def test_returnArrray2ItemsAndBufferRestOfString_when_bufferHas2SplitCharAndMoreData(self):
+        text = """hola
+        adios
+        bye"""
+
+        self.thread.buffer = text
+        self.thread.process_data()
+
+        eq_(self.thread.queue_save_data.qsize(), 2)
+        eq_(self.thread.buffer, "bye")
+
+    def test_returnArrray2ItemsAndBufferEmpty_when_bufferHas2SplitCharOnly(self):
+        text = """hola
+        adios
+"""
+
+        self.thread.buffer = text
+        self.thread.process_data()
+
+        eq_(self.thread.queue_save_data.qsize(), 2)
+        eq_(len(self.thread.buffer), 0)
+
+    def test_returnException_when_bufferHasNotSplitChar(self):
+        text = """hola"""
+        self.thread.buffer = text
+
+        self.assertRaises(ProcessDataExecption, self.thread.process_data)
 
 
 if __name__ == '__main__':
