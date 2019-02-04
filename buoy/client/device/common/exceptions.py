@@ -28,3 +28,9 @@ class LostConnectionException(DeviceBaseException):
 class DeviceNoDetectedException(DeviceBaseException):
     def __init__(self, exception: Exception, message="Device no detected", level=NotificationLevel.CRITICAL, **kwargs):
         super().__init__(message=message, exception=exception, level=level, **kwargs)
+
+
+class ProcessDataExecption(DeviceBaseException):
+    def __init__(self, exception: Exception, message="Error processed data",
+                 level=NotificationLevel.CRITICAL, **kwargs):
+        super().__init__(message=message, exception=exception, level=level, **kwargs)

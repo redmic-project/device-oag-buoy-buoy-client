@@ -10,7 +10,7 @@ import paho.mqtt.client as mqtt
 from serial import Serial, SerialException
 
 from buoy.client.device.common.database import DeviceDB
-from buoy.client.device.common.exceptions import LostConnectionException, DeviceNoDetectedException
+from buoy.client.device.common.exceptions import LostConnectionException, DeviceNoDetectedException, ProcessDataExecption
 from buoy.client.notification.common import BaseItem
 from buoy.client.internet_connection import is_connected_to_internet
 
@@ -80,7 +80,6 @@ class DeviceReader(DeviceBaseThread):
             logger.debug("Waiting data")
             if not self.is_buffer_empty():
                 self.process_data()
-                self.clean_buffer()
 
         except (OSError, Exception) as ex:
             logger.error("Device disconnected")
@@ -94,7 +93,12 @@ class DeviceReader(DeviceBaseThread):
 
     def process_data(self):
         logger.debug("Proccessing data: %s", self.buffer)
-        for line in self.split_by_lines(self.buffer):
+        buffer = self.buffer.rsplit(self.char_splitter, 1)
+        try:
+            self.buffer = buffer[1].strip()
+        except IndexError as ex:
+            raise ProcessDataExecption(message="Proccesing data without char split", exception=ex)
+        for line in self.split_by_lines(buffer[0]):
             item = self.parser(line)
             if item:
                 self.queue_save_data.put_nowait(item)
@@ -103,13 +107,10 @@ class DeviceReader(DeviceBaseThread):
 
     def split_by_lines(self, buffer: str) -> List[str]:
         lines = buffer.split(self.char_splitter)
-        return [l for l in lines if len(l.strip())]
+        return [l.strip() for l in lines if len(l.strip())]
 
     def parser(self, data) -> BaseItem:
         pass
-
-    def clean_buffer(self):
-        self.buffer = ''
 
 
 class DeviceWriter(DeviceBaseThread):
