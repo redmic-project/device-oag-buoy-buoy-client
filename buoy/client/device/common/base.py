@@ -193,6 +193,7 @@ class ItemSendThread(BaseThread):
         self.broker_url = kwargs.pop("broker_url", "iot.eclipse.org")
         self.broker_port = kwargs.pop("broker_port", 1883)
         self.topic_data = kwargs.pop("topic_data", "buoy")
+        self.keepalive = kwargs.pop("keepalive", 60)
 
         self.client = mqtt.Client(client_id=self.client_id, protocol=self.protocol, clean_session=self.clean_session)
         if "username" in kwargs:
@@ -203,32 +204,26 @@ class ItemSendThread(BaseThread):
         self.qos = kwargs.pop("qos", 0)
         self.item_in_queue = set()
 
-    def run(self):
-        self.active = True
-        self.connect_server()
-
-    def connect_server(self):
-        while self.is_active():
-            if self.connected_to_mqtt:
-                items = self.waiting_data()
-                for item in items:
-                    self.add_item_in_queue(item)
-                    self.send(item)
-            elif is_connected_to_internet(max_attempts=1, time_between_attempts=1):
-                logger.info("Connected to internet")
-                try:
-                    if not self.attemp_connect:
-                        self.attemp_connect = True
-                        self.client.connect(self.broker_url, self.broker_port, 60)
-                        self.client.on_connect = self.on_connect
-                        self.client.on_disconnect = self.on_disconnect
-                        self.thread_mqtt = Thread(target=loop, args=(self.client,))
-                        self.thread_mqtt.start()
-                except Exception as ex:
-                    logger.warning("Connecting to broker, but not internet connection")
-                    pass
-
-            time.sleep(self.timeout_wait)
+    def activity(self):
+        if self.connected_to_mqtt:
+            items = self.waiting_data()
+            for item in items:
+                self.add_item_in_queue(item)
+                self.send(item)
+        elif is_connected_to_internet(max_attempts=1, time_between_attempts=1):
+            logger.info("Connected to internet")
+            try:
+                if not self.attemp_connect:
+                    self.attemp_connect = True
+                    self.client.connect(host=self.broker_url, port=self.broker_port, keepalive=self.keepalive)
+                    self.client.on_connect = self.on_connect
+                    self.client.on_disconnect = self.on_disconnect
+                    self.thread_mqtt = Thread(target=loop, args=(self.client,))
+                    self.thread_mqtt.start()
+            except Exception as ex:
+                logger.error(ex, exc_info=True)
+                logger.warning("Trying connect to broker, but there isn't internet connection")
+                pass
 
     def waiting_data(self) -> List[BaseItem]:
         """
@@ -257,20 +252,19 @@ class ItemSendThread(BaseThread):
         self.item_in_queue.discard(item.id)
 
     def send(self, item):
-        # TODO Contemplar el caso de que no haya datos
         logger.info("Publish data '%s' to topic '%s'" % (self.topic_data, str(item.to_json())))
-        result = self.client.publish(self.topic_data, str(item.to_json()), qos=self.qos)
-
-        # TODO sustituir por un callback
-        result.wait_for_publish()
+        try:
+            result = self.client.publish(self.topic_data, str(item.to_json()), qos=self.qos)
+            result.wait_for_publish()
+        except Exception as ex:
+            logger.error(ex, exc_info=True)
+            pass
 
         self.remove_item_the_queue(item)
-        if result.rc == 0:
-            # TODO Actualizar registro en db
+        if result and result.rc == 0:
             logger.debug("Update item in db %i", item.id)
             self.db.set_sent(item.id)
         else:
-            # TODO Actualizar registro en db aumentado el nº de intentos
             logger.warning("Error sended item %i", item.id)
             self.db.set_failed(item.id)
 
