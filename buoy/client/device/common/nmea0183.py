@@ -56,7 +56,9 @@ class WIMDA(BaseItem):
 
     @press_bar.setter
     def press_bar(self, value):
-        self._press_bar = self._convert_string_to_decimal(value)
+        press = self._convert_string_to_decimal(value)
+        if press:
+            self._press_bar = press * 1000
 
     @property
     def air_temp(self):

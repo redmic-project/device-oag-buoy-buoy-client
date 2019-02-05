@@ -32,15 +32,17 @@ class TestProtocolNMEA0183(unittest.TestCase):
     def test_wimda_properties(self):
 
         item = WIMDA(**self.data)
+        data_expected = self.data.copy()
+        data_expected["press_bar"] = '1027'
 
         for name in dir(item):
             value = getattr(item, name)
             if type(value) is datetime:
                 eq_(True, True)
             elif type(value) is Decimal:
-                eq_(value, Decimal(self.data[name]))
+                eq_(value, Decimal(data_expected[name]))
             else:
-                eq_(value, self.data[name])
+                eq_(value, data_expected[name])
 
     def test_wimda_fulled(self):
 
@@ -67,6 +69,9 @@ class TestProtocolNMEA0183(unittest.TestCase):
     def test_wimda_serialize(self):
         serial = self.item_expected.to_json()
 
+        data_expected = self.data.copy()
+        data_expected["press_bar"] = '1027.0'
+
         json_expected = ('"abs_humidity":{abs_humidity},'
                          '"air_temp":{air_temp},'
                          '"date":"{date}",'
@@ -78,7 +83,7 @@ class TestProtocolNMEA0183(unittest.TestCase):
                          '"wind_dir_magnetic":{wind_dir_magnetic},'
                          '"wind_dir_true":{wind_dir_true},'
                          '"wind_knots":{wind_knots},'
-                         '"wind_meters":{wind_meters}').format(**self.data)
+                         '"wind_meters":{wind_meters}').format(**data_expected)
 
         ok_(json_expected in str(serial))
 
