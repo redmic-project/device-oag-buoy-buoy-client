@@ -33,6 +33,8 @@ publishing:
   image: python:3.6
   variables:
     PIP_CACHE_DIR: "${CI_PROJECT_DIR}/pip-cache"
+  only:
+    - tags
   before_script:
     - pip3 install twine
   script:
