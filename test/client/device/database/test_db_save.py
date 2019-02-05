@@ -59,7 +59,11 @@ class BaseDBTests(unittest.TestCase):
 
         eq_(len(rows), 1)
         row = rows[0]
-        for key, value in self.data.items():
+
+        if not hasattr(self, "data_expected"):
+            self.data_expected = self.data
+
+        for key, value in self.data_expected.items():
             eq_(row[key], value)
 
         eq_(row['id'], item.id)
@@ -95,6 +99,9 @@ class TestPB200(BaseDBTests):
         'wind_knots': 134.6,
         'wind_meters': 0.3
     }
+
+    data_expected = data.copy()
+    data_expected["press_bar"] *= 1000
 
 
 if __name__ == '__main__':
