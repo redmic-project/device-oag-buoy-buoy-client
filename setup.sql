@@ -18,7 +18,7 @@ CREATE TABLE pb200 (
     id BIGSERIAL PRIMARY KEY,
     date TIMESTAMP WITH TIME ZONE NOT NULL,
     press_inch double precision,
-    press_bar double precision,
+    press_mbar double precision,
     air_temp double precision,
     water_temp double precision,
     rel_humidity double precision,
