@@ -20,6 +20,9 @@ class WIMDA(BaseItem):
 
     @staticmethod
     def from_nmea(in_datetime, wimda):
+        if hasattr(wimda, "b_pressure_bar"):
+            wimda.b_pressure_bar *= 1000
+
         return WIMDA(
             date=in_datetime,
             press_inch=wimda.b_pressure_inch,

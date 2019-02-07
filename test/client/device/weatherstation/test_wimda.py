@@ -27,12 +27,12 @@ class TestProtocolNMEA0183(unittest.TestCase):
             'wind_meters': '0.3'
         }
 
-        self.item_expected = WIMDA(**self.data)
-
     def test_wimda_properties(self):
 
+        item_expected = WIMDA(**self.data)
+
         for name in self.data.keys():
-            value = getattr(self.item_expected, name)
+            value = getattr(item_expected, name)
             if type(value) is datetime:
                 eq_(True, True)
             elif type(value) is Decimal:
@@ -41,9 +41,11 @@ class TestProtocolNMEA0183(unittest.TestCase):
                 eq_(value, self.data[name])
 
     def test_wimda_fulled(self):
-
+        item_expected = WIMDA(**self.data)
+        
+        press_bar = '1.027'
         mda = pynmea2.MDA('WI', 'MDA', (
-            self.data['press_inch'], 'I', self.data['press_mbar'], 'B',
+            self.data['press_inch'], 'I', press_bar, 'B',
             self.data['air_temp'], 'C', self.data['water_temp'], 'C', self.data['rel_humidity'],
             self.data['abs_humidity'], self.data['dew_point'], 'C', self.data['wind_dir_true'], 'T',
             self.data['wind_dir_magnetic'], 'M', self.data['wind_knots'], 'N',
@@ -51,7 +53,7 @@ class TestProtocolNMEA0183(unittest.TestCase):
 
         item = WIMDA.from_nmea(self.data['date'], mda)
 
-        eq_(item, self.item_expected)
+        eq_(item, item_expected)
 
     def test_wimda_incompleted(self):
         del self.data['water_temp']
@@ -63,7 +65,8 @@ class TestProtocolNMEA0183(unittest.TestCase):
         ok_(not getattr(item, 'rel_humidity'))
         
     def test_wimda_serialize(self):
-        serial = self.item_expected.to_json()
+        item_expected = WIMDA(**self.data)
+        serial = item_expected.to_json()
 
         json_expected = ('"abs_humidity":{abs_humidity},'
                          '"air_temp":{air_temp},'
