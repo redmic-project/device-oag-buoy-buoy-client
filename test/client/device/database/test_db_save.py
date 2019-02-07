@@ -88,7 +88,7 @@ class TestPB200(BaseDBTests):
     data = {
         'date': datetime.now(tz=timezone.utc),
         'press_inch': 30.3273,
-        'press_bar': 1.0270,
+        'press_mbar': 1027.0,
         'air_temp': 26.8,
         'water_temp': 20.1,
         'rel_humidity': 12.3,
@@ -99,9 +99,6 @@ class TestPB200(BaseDBTests):
         'wind_knots': 134.6,
         'wind_meters': 0.3
     }
-
-    data_expected = data.copy()
-    data_expected["press_bar"] *= 1000
 
 
 if __name__ == '__main__':

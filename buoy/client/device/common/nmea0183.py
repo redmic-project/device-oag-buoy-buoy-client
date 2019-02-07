@@ -6,7 +6,7 @@ from buoy.client.device.common.item import BaseItem
 class WIMDA(BaseItem):
     def __init__(self, **kwargs):
         self.press_inch = kwargs.pop('press_inch', None)
-        self.press_bar = kwargs.pop('press_bar', None)
+        self.press_mbar = kwargs.pop('press_mbar', None)
         self.air_temp = kwargs.pop('air_temp', None)
         self.water_temp = kwargs.pop('water_temp', None)
         self.rel_humidity = kwargs.pop('rel_humidity', None)
@@ -23,7 +23,7 @@ class WIMDA(BaseItem):
         return WIMDA(
             date=in_datetime,
             press_inch=wimda.b_pressure_inch,
-            press_bar=wimda.b_pressure_bar,
+            press_mbar=wimda.b_pressure_bar,
             air_temp=wimda.air_temp,
             water_temp=wimda.water_temp,
             rel_humidity=wimda.rel_humidity,
@@ -47,18 +47,16 @@ class WIMDA(BaseItem):
         self._press_inch = self._convert_string_to_decimal(value)
 
     @property
-    def press_bar(self):
+    def press_mbar(self):
         """
         :return: Barometric pressure, bars
         :rtype: Decimal
         """
-        return self._press_bar
+        return self._press_mbar
 
-    @press_bar.setter
-    def press_bar(self, value):
-        press = self._convert_string_to_decimal(value)
-        if press:
-            self._press_bar = press * 1000
+    @press_mbar.setter
+    def press_mbar(self, value):
+        self._press_mbar = self._convert_string_to_decimal(value)
 
     @property
     def air_temp(self):

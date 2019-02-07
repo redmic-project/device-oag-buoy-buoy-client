@@ -16,7 +16,7 @@ class TestACMPlusReader(unittest.TestCase):
             'date': self.date,
             'air_temp': '26.8',
             'press_inch': '30.3273',
-            'press_bar': '1.027',
+            'press_mbar': '1.027',
             'water_temp': '20.1',
             'rel_humidity': '12.3',
             'abs_humidity': '21.0',
@@ -31,14 +31,14 @@ class TestACMPlusReader(unittest.TestCase):
 
     @patch('buoy.client.device.common.base.Device')
     def test_should_returnItem_when_parseWIMDASentence(self, mock_device):
-        line = "$WIMDA,{press_inch},I,{press_bar},B,{air_temp},C," \
+        line = "$WIMDA,{press_inch},I,{press_mbar},B,{air_temp},C," \
                "{water_temp},C,{rel_humidity},{abs_humidity},{dew_point},C," \
                "{wind_dir_true},T,{wind_dir_magnetic},M,{wind_knots},N," \
                "{wind_meters},M*28".format(**self.data)
         reader = PB200Reader(device=mock_device, queue_save_data=Queue(), queue_notice=Queue(),
                              queue_exceptions=Queue())
         item = reader.parser(line)
-        item._date = self.date
+        item.date = self.date
 
         ok_(item == self.item_expected)
 

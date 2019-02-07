@@ -16,7 +16,7 @@ class TestProtocolNMEA0183(unittest.TestCase):
             'date': '2017-11-29T10:18:48.714+00:00',
             'air_temp': '26.8',
             'press_inch': '30.327',
-            'press_bar': '1.027',
+            'press_mbar': '1027.0',
             'water_temp': '20.1',
             'rel_humidity': '12.3',
             'abs_humidity': '21.0',
@@ -31,23 +31,19 @@ class TestProtocolNMEA0183(unittest.TestCase):
 
     def test_wimda_properties(self):
 
-        item = WIMDA(**self.data)
-        data_expected = self.data.copy()
-        data_expected["press_bar"] = '1027'
-
-        for name in dir(item):
-            value = getattr(item, name)
+        for name in self.data.keys():
+            value = getattr(self.item_expected, name)
             if type(value) is datetime:
                 eq_(True, True)
             elif type(value) is Decimal:
-                eq_(value, Decimal(data_expected[name]))
+                eq_(value, Decimal(self.data[name]))
             else:
-                eq_(value, data_expected[name])
+                eq_(value, self.data[name])
 
     def test_wimda_fulled(self):
 
         mda = pynmea2.MDA('WI', 'MDA', (
-            self.data['press_inch'], 'I', self.data['press_bar'], 'B',
+            self.data['press_inch'], 'I', self.data['press_mbar'], 'B',
             self.data['air_temp'], 'C', self.data['water_temp'], 'C', self.data['rel_humidity'],
             self.data['abs_humidity'], self.data['dew_point'], 'C', self.data['wind_dir_true'], 'T',
             self.data['wind_dir_magnetic'], 'M', self.data['wind_knots'], 'N',
@@ -69,26 +65,23 @@ class TestProtocolNMEA0183(unittest.TestCase):
     def test_wimda_serialize(self):
         serial = self.item_expected.to_json()
 
-        data_expected = self.data.copy()
-        data_expected["press_bar"] = '1027.0'
-
         json_expected = ('"abs_humidity":{abs_humidity},'
                          '"air_temp":{air_temp},'
                          '"date":"{date}",'
                          '"dew_point":{dew_point},'
-                         '"press_bar":{press_bar},'
                          '"press_inch":{press_inch},'
+                         '"press_mbar":{press_mbar},'
                          '"rel_humidity":{rel_humidity},'
                          '"water_temp":{water_temp},'
                          '"wind_dir_magnetic":{wind_dir_magnetic},'
                          '"wind_dir_true":{wind_dir_true},'
                          '"wind_knots":{wind_knots},'
-                         '"wind_meters":{wind_meters}').format(**data_expected)
+                         '"wind_meters":{wind_meters}').format(**self.data)
 
         ok_(json_expected in str(serial))
 
     def test_wimda_deserialize(self):
-        json_in = ('{"id": 2, "abs_humidity": 21.0, "air_temp": 26.8, "press_bar": 1.027,'
+        json_in = ('{"id": 2, "abs_humidity": 21.0, "air_temp": 26.8, "press_mbar": 1027.0,'
                    '"press_inch": 30.3273, "date": "2017-02-14 12:46:32.584366", "dew_point": 2.3,'
                    '"rel_humidity": 12.3, "water_temp": 20.1, "wind_dir_magnetic": 128.7, '
                    '"wind_dir_true": 2.0, "wind_knots": 134.6, "wind_meters": 0.3}')
