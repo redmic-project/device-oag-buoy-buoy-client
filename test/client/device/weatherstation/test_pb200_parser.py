@@ -27,8 +27,6 @@ class TestACMPlusReader(unittest.TestCase):
             'wind_meters': '0.3'
         }
 
-        self.item_expected = WIMDA(**self.data)
-
     @patch('buoy.client.device.common.base.Device')
     def test_should_returnItem_when_parseWIMDASentence(self, mock_device):
         line = "$WIMDA,{press_inch},I,{press_mbar},B,{air_temp},C," \
@@ -40,7 +38,11 @@ class TestACMPlusReader(unittest.TestCase):
         item = reader.parser(line)
         item.date = self.date
 
-        ok_(item == self.item_expected)
+        data_expected = self.data.copy()
+        data_expected["press_mbar"] = '1027.0'
+        item_expected = WIMDA(**data_expected)
+
+        ok_(item == item_expected)
 
 
 if __name__ == '__main__':
