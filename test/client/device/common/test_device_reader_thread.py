@@ -1,13 +1,13 @@
 import unittest
-from unittest.mock import patch
 from queue import Queue
 from unittest.mock import MagicMock
+from unittest.mock import patch
 
 from nose.tools import eq_
 from serial import SerialException
 
-from buoy.client.device.common.exceptions import ProcessDataExecption
 from buoy.client.device.common.base import DeviceReader
+from buoy.client.device.common.exceptions import ProcessDataExecption
 from buoy.client.notification.client.common import NoticePriorityQueue
 
 serial_config = {
@@ -34,7 +34,8 @@ class TestItemReaderThread(unittest.TestCase):
     def setUp(self):
         self.queue_save_data = Queue()
         self.queue_notice = NoticePriorityQueue()
-        self.thread = DeviceReaderMock(queue_save_data=self.queue_save_data, queue_notice=self.queue_notice, device=device)
+        self.thread = DeviceReaderMock(queue_save_data=self.queue_save_data, queue_notice=self.queue_notice,
+                                       device=device)
 
     def test_returnTwoItems_when_passStringWith3CarriageReturnAndWhiteSpace(self):
         text = """hola
@@ -84,7 +85,6 @@ class TestItemReaderThread(unittest.TestCase):
     @patch.object(DeviceReader, 'read_data', side_effect=SerialException())
     @patch.object(DeviceReader, 'error')
     def test_shouldStopThread_when_raiseExceptionInReadDataMethod(self, mock_read, mock_error):
-
         self.thread.active = True
         self.thread.activity()
         eq_(mock_error.call_count, 1)

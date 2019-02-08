@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import time
 from queue import Queue, Empty, Full
 from threading import Thread
 from typing import List
 
 import paho.mqtt.client as mqtt
+import time
 from serial import Serial, SerialException
 
 from buoy.client.device.common.database import DeviceDB
-from buoy.client.device.common.exceptions import LostConnectionException, DeviceNoDetectedException, ProcessDataExecption
-from buoy.client.notification.common import BaseItem
+from buoy.client.device.common.exceptions import LostConnectionException, DeviceNoDetectedException, \
+    ProcessDataExecption
 from buoy.client.internet_connection import is_connected_to_internet
+from buoy.client.notification.common import BaseItem
 
 logger = logging.getLogger(__name__)
 

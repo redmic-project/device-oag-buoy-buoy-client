@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*- pyversions=3.3+
 
 import logging.config
-import time
 import os
+
+import time
 
 import buoy.client.utils.argsparse as args_parse
 import buoy.client.utils.config as load_config
-from buoy.client.service.daemon import Daemon
 from buoy.client.network.connection import is_connected_to_internet
+from buoy.client.service.daemon import Daemon
 
 DAEMON_NAME = 'check-dongle-connectivity'
 

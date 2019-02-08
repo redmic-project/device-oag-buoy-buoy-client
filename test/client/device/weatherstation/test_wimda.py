@@ -1,12 +1,12 @@
+import json
 import unittest
+from datetime import datetime
+from decimal import Decimal
 
 import pynmea2
 from nose.tools import eq_, ok_
 
 from buoy.client.device.weatherstation.pb200 import WIMDA
-from datetime import datetime
-from decimal import Decimal
-import json
 
 
 class TestProtocolNMEA0183(unittest.TestCase):
@@ -63,7 +63,7 @@ class TestProtocolNMEA0183(unittest.TestCase):
 
         ok_(not getattr(item, 'water_temp'))
         ok_(not getattr(item, 'rel_humidity'))
-        
+
     def test_wimda_serialize(self):
         item_expected = WIMDA(**self.data)
         serial = item_expected.to_json()
@@ -99,4 +99,3 @@ class TestProtocolNMEA0183(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

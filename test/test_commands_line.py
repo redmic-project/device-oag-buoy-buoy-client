@@ -1,12 +1,12 @@
 import threading
-import time
 import unittest
 from os import EX_OK
 
-import buoy.client.utils.config as load_config
-from buoy.client.weather_station import WeatherStationDaemon
-from buoy.client.current_meter import CurrentMeterDaemon
+import time
 
+import buoy.client.utils.config as load_config
+from buoy.client.current_meter import CurrentMeterDaemon
+from buoy.client.weather_station import WeatherStationDaemon
 
 config_buoy_file = "test/support/config/buoy.yaml"
 config_ip_file = "test/support/config/ip.yaml"

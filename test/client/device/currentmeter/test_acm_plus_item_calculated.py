@@ -1,9 +1,10 @@
-import unittest
 import json
-from decimal import *
+import unittest
 from datetime import datetime
+from decimal import *
 
 from nose.tools import eq_, ok_
+
 from buoy.client.device.currentmeter.acmplus import ACMPlusItem
 
 

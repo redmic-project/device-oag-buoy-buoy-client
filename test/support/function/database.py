@@ -1,5 +1,5 @@
-import testing.postgresql
 import psycopg2
+import testing.postgresql
 
 db = None
 db_con = None
@@ -50,6 +50,5 @@ def apply_sql_clause(sql_clause):
 
 
 def close_db():
-
     db_con.close()
     db.stop()
