@@ -42,7 +42,7 @@ class TestProtocolNMEA0183(unittest.TestCase):
 
     def test_wimda_fulled(self):
         item_expected = WIMDA(**self.data)
-        
+
         press_bar = '1.027'
         mda = pynmea2.MDA('WI', 'MDA', (
             self.data['press_inch'], 'I', press_bar, 'B',
