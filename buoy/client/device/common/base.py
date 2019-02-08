@@ -293,10 +293,10 @@ class ItemSendThread(BaseThread):
 
     def on_disconnect(self, client, userdata, rc):
         self.connected_to_mqtt = False
-        client.loop_stop()
         if rc != 0:
             logger.error("Unexpected disconnection to broker")
         else:
+            client.loop_stop()
             super().stop()
         logger.info("Disconnected to broker with result code %s" % str(rc))
 
