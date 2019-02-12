@@ -209,8 +209,9 @@ class ItemSendThread(BaseThread):
         if self.connected_to_mqtt:
             items = self.waiting_data()
             for item in items:
-                self.add_item_in_queue(item)
-                self.send(item)
+                if self.connected_to_mqtt:
+                    self.add_item_in_queue(item)
+                    self.send(item)
         elif is_connected_to_internet(max_attempts=1, time_between_attempts=1):
             logger.info("Connected to internet")
             try:
@@ -253,7 +254,7 @@ class ItemSendThread(BaseThread):
         self.item_in_queue.discard(item.id)
 
     def send(self, item):
-        logger.info("Publish data '%s' to topic '%s'" % (self.topic_data, str(item.to_json())))
+        logger.info("Publish datagi '%s' to topic '%s'" % (self.topic_data, str(item.to_json())))
         try:
             result = self.client.publish(self.topic_data, str(item.to_json()), qos=self.qos)
             result.wait_for_publish()
