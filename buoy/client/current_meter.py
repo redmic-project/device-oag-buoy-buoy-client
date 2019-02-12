@@ -5,7 +5,6 @@ import logging.config
 
 import buoy.client.utils.argsparse as args_parse
 import buoy.client.utils.config as load_config
-
 from buoy.client.device.common.database import DeviceDB
 from buoy.client.device.currentmeter.acmplus import ACMPlus, ACMPlusItem
 from buoy.client.service.daemon import Daemon, get_config

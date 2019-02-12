@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import time
-
 from subprocess import DEVNULL, STDOUT, check_call, CalledProcessError
+
+import time
 
 logger = logging.getLogger(__name__)
 

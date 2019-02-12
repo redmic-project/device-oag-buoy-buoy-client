@@ -1,10 +1,10 @@
 import threading
-import time
 import unittest
 from os import EX_OK, EX_OSERR
 from unittest.mock import patch
-from nose.tools import eq_
 
+import time
+from nose.tools import eq_
 from serial import SerialException
 
 import buoy.client.utils.config as load_config
@@ -47,7 +47,7 @@ class BaseDeviceTest(unittest.TestCase):
             if hasattr(self.daemon, field):
                 thread = getattr(self.daemon, field)
                 is_active = getattr(thread, "is_active")()
-                eq_(is_active, False, msg=("Thread %s is active" % (field, )))
+                eq_(is_active, False, msg=("Thread %s is active" % (field,)))
 
         self.assertEqual(cm.exception.code, EX_OK)
 

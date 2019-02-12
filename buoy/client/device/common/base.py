@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import time
 from queue import Queue, Empty, Full
 from threading import Thread
 from typing import List
 
 import paho.mqtt.client as mqtt
+import time
 from serial import Serial, SerialException
 
 from buoy.client.device.common.database import DeviceDB
-from buoy.client.device.common.exceptions import LostConnectionException, DeviceNoDetectedException, ProcessDataExecption
-from buoy.client.notification.common import BaseItem
+from buoy.client.device.common.exceptions import LostConnectionException, DeviceNoDetectedException, \
+    ProcessDataExecption
 from buoy.client.internet_connection import is_connected_to_internet
+from buoy.client.notification.common import BaseItem
 
 logger = logging.getLogger(__name__)
 
@@ -208,8 +209,9 @@ class ItemSendThread(BaseThread):
         if self.connected_to_mqtt:
             items = self.waiting_data()
             for item in items:
-                self.add_item_in_queue(item)
-                self.send(item)
+                if self.connected_to_mqtt:
+                    self.add_item_in_queue(item)
+                    self.send(item)
         elif is_connected_to_internet(max_attempts=1, time_between_attempts=1):
             logger.info("Connected to internet")
             try:
@@ -252,7 +254,7 @@ class ItemSendThread(BaseThread):
         self.item_in_queue.discard(item.id)
 
     def send(self, item):
-        logger.info("Publish data '%s' to topic '%s'" % (self.topic_data, str(item.to_json())))
+        logger.info("Publish datagi '%s' to topic '%s'" % (self.topic_data, str(item.to_json())))
         try:
             result = self.client.publish(self.topic_data, str(item.to_json()), qos=self.qos)
             result.wait_for_publish()

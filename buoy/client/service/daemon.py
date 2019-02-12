@@ -3,9 +3,10 @@
 import logging
 import signal
 import sys
-import time
 from os import getpid, makedirs, remove, EX_OK, EX_OSERR
 from os.path import isfile, exists, join
+
+import time
 
 logger = logging.getLogger(__name__)
 

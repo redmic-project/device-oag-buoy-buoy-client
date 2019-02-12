@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*- pyversions=3.3+
 
+import datetime
 import logging.config
 import os
-import datetime
+
 import buoy.lib.utils.argsparse as args_parse
 import buoy.lib.utils.config as load_config
 
