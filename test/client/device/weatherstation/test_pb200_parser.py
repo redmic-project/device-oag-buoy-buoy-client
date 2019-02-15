@@ -12,7 +12,7 @@ class TestACMPlusReader(unittest.TestCase):
     def setUp(self):
         self.date = datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
         self.data = {
-            'id': None,
+            'uuid': None,
             'date': self.date,
             'air_temp': '26.8',
             'press_inch': '30.3273',
@@ -37,6 +37,7 @@ class TestACMPlusReader(unittest.TestCase):
                              queue_exceptions=Queue())
         item = reader.parser(line)
         item.date = self.date
+        item.uuid = None
 
         data_expected = self.data.copy()
         data_expected["press_mbar"] = '1027.0'

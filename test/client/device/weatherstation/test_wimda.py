@@ -12,7 +12,7 @@ from buoy.client.device.weatherstation.pb200 import WIMDA
 class TestProtocolNMEA0183(unittest.TestCase):
     def setUp(self):
         self.data = {
-            'id': None,
+            'uuid': None,
             'date': '2017-11-29T10:18:48.714+00:00',
             'air_temp': '26.8',
             'press_inch': '30.327',
@@ -52,6 +52,7 @@ class TestProtocolNMEA0183(unittest.TestCase):
             self.data['wind_meters'], 'M'))
 
         item = WIMDA.from_nmea(self.data['date'], mda)
+        item.uuid = None
 
         eq_(item, item_expected)
 
@@ -84,7 +85,7 @@ class TestProtocolNMEA0183(unittest.TestCase):
         ok_(json_expected in str(serial))
 
     def test_wimda_deserialize(self):
-        json_in = ('{"id": 2, "abs_humidity": 21.0, "air_temp": 26.8, "press_mbar": 1027.0,'
+        json_in = ('{"uuid": 2, "abs_humidity": 21.0, "air_temp": 26.8, "press_mbar": 1027.0,'
                    '"press_inch": 30.3273, "date": "2017-02-14 12:46:32.584366", "dew_point": 2.3,'
                    '"rel_humidity": 12.3, "water_temp": 20.1, "wind_dir_magnetic": 128.7, '
                    '"wind_dir_true": 2.0, "wind_knots": 134.6, "wind_meters": 0.3}')
@@ -93,7 +94,7 @@ class TestProtocolNMEA0183(unittest.TestCase):
 
         item = WIMDA(**a)
 
-        eq_(item.id, 2)
+        eq_(item.uuid, 2)
         eq_(item.wind_knots, Decimal(134.6))
 
 

@@ -40,7 +40,6 @@ class TestItemSaveThread(unittest.TestCase):
     def test_twiceCallSaveMethodAndExitsTwoItemsInNoticeQueue_when_insertTwoItemsInQueueData(self,
                                                                                              mock_is_active, mock_save):
         queue_data = Queue()
-        queue_send = Queue()
         queue_notice = NoticePriorityQueue()
 
         items_expected = []
@@ -48,46 +47,11 @@ class TestItemSaveThread(unittest.TestCase):
             queue_data.put_nowait(item)
             items_expected.append(call(item))
 
-        thread = ItemSaveThread(queue_save_data=queue_data, queue_send_data=queue_send,
-                                db=None, queue_notice=queue_notice)
+        thread = ItemSaveThread(queue_save_data=queue_data, db=None, queue_notice=queue_notice)
         thread.run()
 
         eq_(mock_is_active.call_count, 4)
-        eq_(queue_send.qsize(), 2)
         eq_(mock_save.call_count, 2)
-        eq_(mock_save.call_args_list, items_expected)
-
-    @patch.object(ItemSaveThread, 'save')
-    @patch.object(ItemSaveThread, 'is_active')
-    def test_call4TimesSaveMethodAndOnceSendMethod_when_queueSendIsFull(self, mock_is_active, mock_save):
-        NUM_ITEM = 4
-        QSIZE = 1
-
-        queue_data = Queue()
-        mock_task_done = Mock(return_value=None)
-        queue_data.task_done = mock_task_done
-
-        queue_send = Queue(maxsize=1)
-        queue_notice = NoticePriorityQueue()
-
-        items_expected = []
-        is_active = []
-        for item in get_items(NUM_ITEM):
-            queue_data.put_nowait(item)
-            items_expected.append(call(item))
-            is_active.append(True)
-
-        is_active.append(False)
-        mock_is_active.side_effect = is_active
-
-        thread = ItemSaveThread(queue_save_data=queue_data, queue_send_data=queue_send,
-                                db=None, queue_notice=queue_notice)
-        thread.run()
-
-        eq_(mock_is_active.call_count, NUM_ITEM + 1)
-        eq_(queue_send.qsize(), QSIZE)
-        eq_(mock_save.call_count, NUM_ITEM)
-        eq_(mock_task_done.call_count, NUM_ITEM)
         eq_(mock_save.call_args_list, items_expected)
 
 

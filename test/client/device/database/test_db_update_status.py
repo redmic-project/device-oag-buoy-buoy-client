@@ -51,17 +51,19 @@ class BaseDBUpdateStatusTests(unittest.TestCase):
             cls_item=self.item_class
         )
 
-        sql_clause = """SELECT * FROM %s ORDER BY id""" % (self.db_tablename,)
+        sql_clause = """SELECT * FROM %s ORDER BY date""" % (self.db_tablename,)
         before_rows = apply_sql_clause(sql_clause)
 
-        ids = list(range(1, 22))
-        dev_db.update_status(ids)
+        uuids = list()
+        for row in before_rows:
+            uuids.append(row['uuid'])
+        dev_db.update_status(uuids)
 
         after_rows = apply_sql_clause(sql_clause)
 
         for idx, aft_row in enumerate(after_rows):
             eq_(aft_row['sended'], True)
-            ok_(aft_row['id'] == before_rows[idx]['id'])
+            ok_(aft_row['uuid'] == before_rows[idx]['uuid'])
             ok_(aft_row['num_attempts'] > before_rows[idx]['num_attempts'])
 
 
