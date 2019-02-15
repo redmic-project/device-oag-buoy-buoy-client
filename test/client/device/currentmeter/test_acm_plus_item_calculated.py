@@ -39,7 +39,7 @@ class TestACMlusItemCalculate(unittest.TestCase):
 class TestACMPlusItem(unittest.TestCase):
     def setUp(self):
         self.data = {
-            'id': 1,
+            'uuid': 1,
             'date': '2017-11-29T10:18:48.714+00:00',
             'vx': 0.0,
             'vy': 0.79,
@@ -71,8 +71,8 @@ class TestACMPlusItem(unittest.TestCase):
 
         json_expected = ('"date":"{date}",'
                          '"direction":{direction},'
-                         '"id":{id},'
                          '"speed":{speed},'
+                         '"uuid":{uuid},'
                          '"vx":{vx},'
                          '"vy":{vy},'
                          '"water_temp":{water_temp}').format(**self.data)
@@ -80,14 +80,14 @@ class TestACMPlusItem(unittest.TestCase):
         ok_(json_expected in str(serial))
 
     def test_wimda_deserialize(self):
-        json_in = ('{"id": 2, "direction": 0.0, "speed": 0.79, "vx": 0.0,'
+        json_in = ('{"uuid": 2, "direction": 0.0, "speed": 0.79, "vx": 0.0,'
                    '"vy": 0.79, "date": "2017-02-14 12:46:32.584366", "water_temp": 20.1}')
 
         a = json.loads(json_in)
 
         item = ACMPlusItem(**a)
 
-        eq_(item.id, 2)
+        eq_(item.uuid, 2)
         eq_(item.water_temp, Decimal(20.1))
 
 

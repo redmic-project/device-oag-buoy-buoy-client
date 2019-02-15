@@ -4,7 +4,7 @@ import logging
 import re
 from datetime import datetime, timezone
 
-from buoy.client.device.common.base import DeviceReader, DeviceWriter, ItemSendThread, Device
+from buoy.client.device.common.base import DeviceReader, DeviceWriter, MqttThread, Device
 from buoy.client.device.currentmeter.item import ACMPlusItem
 
 logger = logging.getLogger(__name__)
@@ -34,9 +34,9 @@ class ACMPlusWriter(DeviceWriter):
         super(ACMPlusWriter, self).__init__(**kwargs)
 
 
-class ACMPlusSender(ItemSendThread):
+class ACMPlusSender(MqttThread):
     def __init__(self, **kwargs):
-        super(ItemSendThread, self).__init__(**kwargs)
+        super(MqttThread, self).__init__(**kwargs)
 
 
 class ACMPlus(Device):

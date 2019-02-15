@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS acmplus;
 
 CREATE TABLE acmplus (
-    id BIGSERIAL PRIMARY KEY,
+    uuid varchar PRIMARY KEY,
     date TIMESTAMP WITH TIME ZONE NOT NULL,
     vx double precision,
     vy double precision,
@@ -15,7 +15,7 @@ CREATE TABLE acmplus (
 DROP TABLE IF EXISTS pb200;
 
 CREATE TABLE pb200 (
-    id BIGSERIAL PRIMARY KEY,
+    uuid varchar PRIMARY KEY,
     date TIMESTAMP WITH TIME ZONE NOT NULL,
     press_inch double precision,
     press_mbar double precision,

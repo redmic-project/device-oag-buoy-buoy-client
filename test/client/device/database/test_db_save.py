@@ -66,7 +66,7 @@ class BaseDBTests(unittest.TestCase):
         for key, value in self.data_expected.items():
             eq_(row[key], value)
 
-        eq_(row['id'], item.id)
+        eq_(row['uuid'], item.uuid)
 
 
 class TestACMPlus(BaseDBTests):

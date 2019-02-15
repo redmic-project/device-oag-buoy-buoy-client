@@ -23,12 +23,12 @@ class DeviceDB(object):
         self.tablename_data = db_tablename
         self.cls = cls_item
 
-        self._insert_sql = """INSERT INTO """ + self.tablename_data + """(%s) VALUES %s RETURNING id"""
-        self._find_by_id_sql = """SELECT * FROM """ + self.tablename_data + """ WHERE id = %s"""
-        self._update_status_sql = """UPDATE """ + self.tablename_data + """ SET sended=%s WHERE id = ANY(%s)"""
+        self._insert_sql = """INSERT INTO """ + self.tablename_data + """(%s) VALUES %s RETURNING uuid"""
+        self._find_by_id_sql = """SELECT * FROM """ + self.tablename_data + """ WHERE uuid = %s"""
+        self._update_status_sql = """UPDATE """ + self.tablename_data + """ SET sended=%s WHERE uuid = ANY(%s)"""
         self._select_items_to_send_sql = """SELECT * FROM """ + self.tablename_data + \
                                          """ WHERE sended IS false AND num_attempts < %s """ + \
-                                         """ AND NOT id = ANY(%s) AND date < now() - 30 * interval '1 second'""" + \
+                                         """ AND NOT uuid = ANY(%s) AND date < now() - 30 * interval '1 second'""" + \
                                          """ ORDER BY date LIMIT %s OFFSET %s"""
 
     def connect(self, db_config):
@@ -80,18 +80,18 @@ class DeviceDB(object):
 
         return self._get_items_to_send((num_attemps, discard, size, offset))
 
-    def update_status(self, ids: List[int], status=True):
-        if len(ids):
+    def update_status(self, uuids: List, status=True):
+        if len(uuids):
             with self.get_cursor() as cur:
-                sql = cur.mogrify(self._update_status_sql, (status, ids))
+                sql = cur.mogrify(self._update_status_sql, (status, uuids))
                 cur.execute(sql)
             self.connection.commit()
 
-    def set_sent(self, id: int):
-        self.update_status([id], status=True)
+    def set_sent(self, uuid):
+        self.update_status([uuid], status=True)
 
-    def set_failed(self, id: int):
-        self.update_status([id], status=False)
+    def set_failed(self, uuid):
+        self.update_status([uuid], status=False)
 
     def create_insert_sql(self, item, cursor):
         columns = self.__get_column_names(item)
@@ -110,6 +110,5 @@ class DeviceDB(object):
         :return: list
         """
         columns = list(dict(item).keys())
-        columns.remove('id')
 
         return columns

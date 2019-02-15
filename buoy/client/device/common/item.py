@@ -3,6 +3,7 @@
 import json
 import logging
 from datetime import datetime, timezone
+import uuid
 from decimal import *
 
 from dateutil import parser
@@ -12,20 +13,20 @@ logger = logging.getLogger(__name__)
 
 class BaseItem(object):
     def __init__(self, **kwargs):
-        self.id = kwargs.pop('id', None)
+        self.uuid = kwargs.pop('uuid', str(uuid.uuid4()))
         self.date = kwargs.pop('date', datetime.now(tz=timezone.utc))
 
     @property
-    def id(self):
+    def uuid(self):
         """
         :return: Identifier
         :rtype: Integer
         """
-        return self._id
+        return self._uuid
 
-    @id.setter
-    def id(self, value):
-        self._id = value
+    @uuid.setter
+    def uuid(self, value):
+        self._uuid = value
 
     @property
     def date(self):

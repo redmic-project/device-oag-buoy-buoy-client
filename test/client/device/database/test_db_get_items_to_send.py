@@ -35,7 +35,7 @@ class BaseDBGetItemsTests(unittest.TestCase):
 
         close_db()
 
-    def est_should_return15Items_when_getItemsToSend(self):
+    def test_should_return15Items_when_getItemsToSend(self):
         db_conf = prepare_db()
         apply_sql_file('test/support/data/data_example.sql')
 
@@ -48,7 +48,7 @@ class BaseDBGetItemsTests(unittest.TestCase):
         rows = dev_db.get_items_to_send()
 
         eq_(len(rows), 15)
-        ok_(all(a.id <= b.id for a, b in zip(rows[:-1], rows[1:])))
+        ok_(all(a.date <= b.date for a, b in zip(rows[:-1], rows[1:])))
 
     def test_should_returnZeroItems_when_getItemsToSend(self):
         db_conf = prepare_db()
