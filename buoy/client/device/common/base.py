@@ -13,7 +13,9 @@ from buoy.client.device.common.database import DeviceDB
 from buoy.client.device.common.exceptions import LostConnectionException, DeviceNoDetectedException, \
     ProcessDataExecption
 from buoy.client.internet_connection import is_connected_to_internet
+
 from buoy.client.notification.common import BaseItem
+from buoy.client.device.common.limbo import Limbo
 
 logger = logging.getLogger(__name__)
 
@@ -68,12 +70,17 @@ class DeviceBaseThread(BaseThread):
 class DeviceReader(DeviceBaseThread):
     """ Clase encargada de leer y parsear los datos que devuelve el dispositivo """
 
-    def __init__(self, device: Serial, queue_save_data: Queue, queue_notice: Queue, **kwargs):
+    def __init__(self, device: Serial, queue_notice: Queue, **kwargs):
         self.char_splitter = kwargs.pop('char_splitter', '\n')
         super(DeviceReader, self).__init__(device, queue_notice)
-        self.first_item = False
-        self.queue_save_data = queue_save_data
         self.buffer = ''
+
+        self.queue_save_data = kwargs.pop('queue_save_data', None)
+        if not self.queue_save_data:
+            logging.info("No save data in database")
+        self.queue_send_data = kwargs.pop('queue_send_data', None)
+        if not self.queue_send_data:
+            logging.info("No send data in real-time")
 
     def activity(self):
         try:
@@ -102,8 +109,7 @@ class DeviceReader(DeviceBaseThread):
         for line in self.split_by_lines(buffer[0]):
             item = self.parser(line)
             if item:
-                self.queue_save_data.put_nowait(item)
-                logger.info("Received line with data - " + line)
+                self.put_in_queues(item)
             logger.debug("Received data - " + line)
 
     def split_by_lines(self, buffer: str) -> List[str]:
@@ -112,6 +118,21 @@ class DeviceReader(DeviceBaseThread):
 
     def parser(self, data) -> BaseItem:
         pass
+
+    def put_in_queues(self, item):
+        logger.info("Item readed from device - " + str(item))
+
+        if self.queue_save_data and not self.queue_save_data.full():
+            try:
+                self.queue_save_data.put_nowait(item)
+            except Full as ex:
+                logger.error("Save data queue is full", ex)
+
+        if self.queue_send_data and not self.queue_send_data.full():
+            try:
+                self.queue_send_data.put_nowait(item)
+            except Full as ex:
+                logger.warning("Send data queue is full", ex)
 
 
 class DeviceWriter(DeviceBaseThread):
@@ -125,7 +146,7 @@ class DeviceWriter(DeviceBaseThread):
         try:
             data = self.queue_write_data.get(timeout=self.timeout_wait)
             self.device.write(data.encode())
-            logger.info("Send - " + data)
+            logger.info("Write data in device - " + data)
             self.queue_write_data.task_done()
         except SerialException as ex:
             logger.error("Device disconnected")
@@ -139,25 +160,16 @@ class ItemSaveThread(BaseThread):
     Clase encargada de guardar los datos en la base de datos
     """
 
-    def __init__(self, db: DeviceDB, queue_save_data: Queue, queue_send_data: Queue, queue_notice: Queue):
+    def __init__(self, db: DeviceDB, queue_save_data: Queue, queue_notice: Queue):
         super(ItemSaveThread, self).__init__(queue_notice)
         self.db = db
         self.queue_save_data = queue_save_data
-        self.queue_send_data = queue_send_data
 
     def activity(self):
         try:
             item = self.queue_save_data.get(timeout=self.timeout_wait)
-            item = self.save(item)
-
-            if item and not self.queue_send_data.full():
-                try:
-                    self.queue_send_data.put_nowait(item)
-                except Full:
-                    logger.warning("Data queue is full")
-
+            self.save(item)
             self.queue_save_data.task_done()
-
         except Empty:
             pass
 
@@ -166,25 +178,43 @@ class ItemSaveThread(BaseThread):
         return self.db.save(item)
 
 
-def loop(client):
-    client.loop_start()
-
-
-class ItemSendThread(BaseThread):
+class ItemInDBToSendThread(BaseThread):
     """
-    Clase base encargada de enviar los datos al servidor
+    Clase base encargada buscar datos en la base de datos que no han sido enviados
     """
 
-    def __init__(self, db: DeviceDB, queue_send_data: Queue, queue_notice: Queue, **kwargs):
-        super(ItemSendThread, self).__init__(queue_notice)
+    def __init__(self, db: DeviceDB, queue_send_data: Queue, queue_notice: Queue):
+        super(ItemInDBToSendThread, self).__init__(queue_notice)
 
         self.db = db
         self.queue_send_data = queue_send_data
         self.queue_notice = queue_notice
-        self.connected_to_mqtt = False
-        self.connected_to_internet = False
-        self.thread_mqtt = None
+        self.limit_queue = 100
+
+    def activity(self):
+        if self.queue_send_data.qsize() < self.limit_queue:
+            items = self.db.get_items_to_send()
+            for item in items:
+                self.queue_send_data.put_nowait(item)
+
+
+def loop(client):
+    client.loop_start()
+
+
+class MqttThread(BaseThread):
+    """
+    Clase base encargada de enviar los datos al servidor
+    """
+
+    def __init__(self, queue_send_data: Queue, queue_notice: Queue, **kwargs):
+        super(MqttThread, self).__init__(queue_notice)
+
+        self.queue_send_data = queue_send_data
+        self.queue_notice = queue_notice
+        self.__connected_to_mqtt = False
         self.attemp_connect = False
+        self.thread_mqtt = None
 
         self.client_id = kwargs.pop("client_id", "")
         self.clean_session = kwargs.pop("clean_session", True)
@@ -195,91 +225,88 @@ class ItemSendThread(BaseThread):
         self.broker_port = kwargs.pop("broker_port", 1883)
         self.topic_data = kwargs.pop("topic_data", "buoy")
         self.keepalive = kwargs.pop("keepalive", 60)
+        self.reconnect_delay = kwargs.pop("reconnect_delay", {"min_delay": 1, "max_delay": 120})
 
         self.client = mqtt.Client(client_id=self.client_id, protocol=self.protocol, clean_session=self.clean_session)
+
+        self.limbo = Limbo()
+
         if "username" in kwargs:
             self.username = kwargs.pop("username", "username")
             self.password = kwargs.pop("password", None)
             self.client.username_pw_set(self.username, self.password)
 
         self.qos = kwargs.pop("qos", 0)
-        self.item_in_queue = set()
 
     def activity(self):
-        if self.connected_to_mqtt:
-            items = self.waiting_data()
-            for item in items:
-                if self.connected_to_mqtt:
-                    self.add_item_in_queue(item)
-                    self.send(item)
-        elif is_connected_to_internet(max_attempts=1, time_between_attempts=1):
-            logger.info("Connected to internet")
-            try:
-                if not self.attemp_connect:
-                    self.attemp_connect = True
-                    self.client.connect(host=self.broker_url, port=self.broker_port, keepalive=self.keepalive)
-                    self.client.on_connect = self.on_connect
-                    self.client.on_disconnect = self.on_disconnect
-                    self.thread_mqtt = Thread(target=loop, args=(self.client,))
-                    self.thread_mqtt.start()
-            except Exception as ex:
-                logger.error(ex, exc_info=True)
-                logger.warning("Trying connect to broker, but there isn't internet connection")
-                pass
+        if self.is_connected_to_mqtt():
+            item = self.queue_send_data.get_nowait()
+            self.send(item)
+            self.queue_send_data.task_done()
+        elif not self.attemp_connect:
+            self.connect_to_mqtt()
 
-    def waiting_data(self) -> List[BaseItem]:
-        """
-        Espera por los datos, los datos que envía el dispositivo tienen
-        preferencia a los de la base de datos.
+    def is_connected_to_mqtt(self):
+        return self.__connected_to_mqtt
 
-        :return Retorna una lista de datos
-        :rtype Lista de tipo BaseItem
-        """
-        items = None
-        while self.is_active() and (not items or not len(items)):
-            try:
-                item = self.queue_send_data.get_nowait()
-                items = [item]
-                self.queue_send_data.task_done()
-            except Empty:
-                items = self.db.get_items_to_send(discard=list(self.item_in_queue))
-            time.sleep(self.timeout_wait)
+    def connect_to_mqtt(self):
+        logger.info("Try to connect to broker")
+        self.attemp_connect = True
+        self.client.connect(host=self.broker_url, port=self.broker_port, keepalive=self.keepalive)
+        self.client.on_connect = self.on_connect
+        self.client.on_disconnect = self.on_disconnect
+        self.client.on_publish = self.on_publish
 
-        return items
-
-    def add_item_in_queue(self, item: BaseItem):
-        self.item_in_queue.add(item.id)
-
-    def remove_item_the_queue(self, item: BaseItem):
-        self.item_in_queue.discard(item.id)
+        self.thread_mqtt = Thread(target=loop, args=(self.client,))
+        self.thread_mqtt.start()
 
     def send(self, item):
-        logger.info("Publish datagi '%s' to topic '%s'" % (self.topic_data, str(item.to_json())))
+        """
+
+        :param item:
+        """
+        logger.info("Publish data '%s' to topic '%s'" % (self.topic_data, str(item.to_json())))
         try:
-            result = self.client.publish(self.topic_data, str(item.to_json()), qos=self.qos)
-            result.wait_for_publish()
-        except Exception as ex:
-            logger.error(ex, exc_info=True)
+            rc = self.client.publish(self.topic_data, str(item.to_json()), qos=self.qos)
+            self.limbo.add(rc.mid, item)
+        except ValueError as ex:
+            logger.error("Can't sent item", ex, exc_info=True)
+            # TODO marcar item como no enviado
             pass
 
-        self.remove_item_the_queue(item)
-        if result and result.rc == 0:
-            logger.debug("Update item in db %i", item.id)
-            self.db.set_sent(item.id)
+    def on_publish(self, client, userdata, mid):
+        """
+        Callback del método publish, si se entra aquí significa que el item fue
+        enviado al broker correctamente
+
+        :param client:
+        :param userdata:
+        :param mid:
+        """
+        if self.limbo.exists(mid):
+            item = self.limbo.pop(mid)
+            logger.debug("Update item in db %s", item.uuid)
+            # TODO Marcar item como enviado
+#            self.db.set_sent(item.id)
         else:
-            logger.warning("Error sended item %i", item.id)
-            self.db.set_failed(item.id)
+            logger.warning("Item isn't in limbo")
 
     def on_connect(self, client, userdata, flags, rc):
+        """
+        :param client:
+        :param userdata:
+        :param flags:
+        :param rc:
+        """
         if rc == 0:
             logger.info("Connected to broker %s with client_id %s", self.broker_url, client)
-            self.connected_to_mqtt = True
+            self.__connected_to_mqtt = True
             if flags["session present"]:
                 logger.info("Connected to broker using existing session")
             else:
                 logger.info("Connected to broker using clean session")
         else:
-            self.connected_to_mqtt = False
+            self.__connected_to_mqtt = False
             if rc == 1:
                 logger.error("Connection refused - incorrect protocol version")
             elif rc == 2:
@@ -294,7 +321,14 @@ class ItemSendThread(BaseThread):
                 logger.error("Error connected to broker")
 
     def on_disconnect(self, client, userdata, rc):
-        self.connected_to_mqtt = False
+        """
+
+        :param client:
+        :param userdata:
+        :param rc:
+        """
+        self.__connected_to_mqtt = False
+        self.limbo.clear()
         if rc != 0:
             logger.error("Unexpected disconnection to broker")
         else:
@@ -315,7 +349,7 @@ class Device(object):
         self.cls_reader = kwargs.pop('cls_reader', None)
         self.cls_writer = kwargs.pop('cls_writer', None)
         self.cls_save = kwargs.pop('cls_save', ItemSaveThread)
-        self.cls_send = kwargs.pop('cls_send', ItemSendThread)
+        self.cls_send = kwargs.pop('cls_send', MqttThread)
         self.mqtt = kwargs.pop('mqtt', None)
 
         self.qsize_send_data = kwargs.pop('qsize_send_data', 1000)
