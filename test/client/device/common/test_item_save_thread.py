@@ -1,10 +1,11 @@
 import unittest
 from datetime import datetime, timezone
 from queue import Queue
-from unittest.mock import patch, call, Mock
+from unittest.mock import patch, call
 
 from nose.tools import eq_
 
+from buoy.client.device.common.item import ItemQueue
 from buoy.client.device.common.base import ItemSaveThread
 from buoy.client.device.common.nmea0183 import WIMDA
 from buoy.client.notification.client.common import NoticePriorityQueue
@@ -44,8 +45,9 @@ class TestItemSaveThread(unittest.TestCase):
 
         items_expected = []
         for item in get_items(2):
-            queue_data.put_nowait(item)
-            items_expected.append(call(item))
+            x = ItemQueue(item=item)
+            queue_data.put_nowait(x)
+            items_expected.append(call(x))
 
         thread = ItemSaveThread(queue_save_data=queue_data, db=None, queue_notice=queue_notice)
         thread.run()

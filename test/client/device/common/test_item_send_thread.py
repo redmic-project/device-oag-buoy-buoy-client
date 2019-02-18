@@ -59,31 +59,23 @@ class FakeMQTT(object):
 
 class TestMqttThread(unittest.TestCase):
     def setUp(self):
-        self.queue_send = Queue()
-        self.queue_notice = NoticePriorityQueue()
-        self.db = FakeDeviceDB()
         self.cls = WIMDA
         self.topic = "redmic/data"
         self.qos = 1
-        self.thread = MqttThread(db=self.db, queue_send_data=self.queue_send, queue_notice=self.queue_notice,
-                                 topic_data=self.topic, qos=self.qos)
-
-    def tearDown(self):
-        self.thread.stop()
 
     @patch.object(MqttThread, 'is_connected_to_mqtt', return_value=False)
     @patch.object(MqttThread, 'connect_to_mqtt')
     def test_onceCallToConnectMqtt_when_inititializeThread(self, mock_is_connected_to_mqtt, mock_connect_to_mqtt):
-        thread = MqttThread(db=self.db, queue_send_data=self.queue_send,
-                            queue_notice=self.queue_notice, topic_data=self.topic, qos=self.qos)
+        thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
+                            queue_notice=NoticePriorityQueue())
         thread.activity()
 
         eq_(mock_is_connected_to_mqtt.call_count, 1)
         eq_(mock_connect_to_mqtt.call_count, 1)
 
     def test_deleteItemInLimbo_when_itemSuccessPublished(self):
-        thread = MqttThread(db=self.db, queue_send_data=self.queue_send,
-                            queue_notice=self.queue_notice, topic_data=self.topic, qos=self.qos)
+        thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
+                            queue_notice=NoticePriorityQueue())
         items = get_items(2)
         for idx, item in enumerate(items):
             thread.limbo.add(idx, item)
@@ -94,8 +86,8 @@ class TestMqttThread(unittest.TestCase):
         ok_(thread.limbo.get(1) is None)
 
     def test_isConnectIsTrue_when_onConnectCallbackReceiveRCEqualZero(self):
-        thread = MqttThread(db=self.db, queue_send_data=self.queue_send,
-                            queue_notice=self.queue_notice, topic_data=self.topic, qos=self.qos)
+        thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
+                            queue_notice=NoticePriorityQueue())
         items = get_items(2)
         for idx, item in enumerate(items):
             thread.limbo.add(idx, item)
@@ -104,8 +96,8 @@ class TestMqttThread(unittest.TestCase):
         ok_(thread.is_connected_to_mqtt())
 
     def test_isConnectIsFalse_when_onConnectCallbackReceiveRcDistinctZero(self):
-        thread = MqttThread(db=self.db, queue_send_data=self.queue_send,
-                            queue_notice=self.queue_notice, topic_data=self.topic, qos=self.qos)
+        thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
+                            queue_notice=NoticePriorityQueue())
         items = get_items(2)
 
         for idx, item in enumerate(items):
@@ -117,8 +109,8 @@ class TestMqttThread(unittest.TestCase):
         ok_(thread.is_connected_to_mqtt() is False)
 
     def test_clearLimboAndStopThread_when_disconnectMqttOk(self):
-        thread = MqttThread(db=self.db, queue_send_data=self.queue_send,
-                            queue_notice=self.queue_notice, topic_data=self.topic, qos=self.qos)
+        thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
+                            queue_notice=NoticePriorityQueue())
         items = get_items(2)
 
         thread.active = True
@@ -135,8 +127,8 @@ class TestMqttThread(unittest.TestCase):
         eq_(thread.limbo.size(), 0)
 
     def test_clearLimboAndDontStopThread_when_disconnectMqttKO(self):
-        thread = MqttThread(db=self.db, queue_send_data=self.queue_send,
-                            queue_notice=self.queue_notice, topic_data=self.topic, qos=self.qos)
+        thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
+                            queue_notice=NoticePriorityQueue())
         items = get_items(2)
 
         thread.active = True
@@ -152,8 +144,8 @@ class TestMqttThread(unittest.TestCase):
         eq_(thread.limbo.size(), 0)
 
     def test_send(self):
-        thread = MqttThread(db=self.db, queue_send_data=self.queue_send,
-                            queue_notice=self.queue_notice, topic_data=self.topic, qos=self.qos)
+        thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
+                            queue_notice=NoticePriorityQueue())
         item = get_item()
 
         client = FakeMQTT()

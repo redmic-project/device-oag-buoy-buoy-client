@@ -15,6 +15,7 @@ from buoy.client.device.common.exceptions import LostConnectionException, Device
 from buoy.client.internet_connection import is_connected_to_internet
 
 from buoy.client.notification.common import BaseItem
+from buoy.client.device.common.item import ItemQueue, Status
 from buoy.client.device.common.limbo import Limbo
 
 logger = logging.getLogger(__name__)
@@ -124,7 +125,7 @@ class DeviceReader(DeviceBaseThread):
 
         if self.queue_save_data and not self.queue_save_data.full():
             try:
-                self.queue_save_data.put_nowait(item)
+                self.queue_save_data.put_nowait(ItemQueue(item=item))
             except Full as ex:
                 logger.error("Save data queue is full", ex)
 
@@ -168,14 +169,27 @@ class ItemSaveThread(BaseThread):
     def activity(self):
         try:
             item = self.queue_save_data.get(timeout=self.timeout_wait)
-            self.save(item)
+
+            if item.status == Status.NEW:
+                self.save(item)
+            elif item.status == Status.SENT:
+                self.set_sent(item)
+            elif item.status == Status.FAILED:
+                self.set_failed(item)
+
             self.queue_save_data.task_done()
         except Empty:
             pass
 
     def save(self, item):
         """ Guarda el registro en la base de datos """
-        return self.db.save(item)
+        self.db.save(item)
+
+    def set_sent(self, item):
+        self.db.set_sent(item.uuid)
+
+    def set_failed(self, item):
+        self.db.set_failed(item.uuid)
 
 
 class ItemInDBToSendThread(BaseThread):
@@ -207,10 +221,11 @@ class MqttThread(BaseThread):
     Clase base encargada de enviar los datos al servidor
     """
 
-    def __init__(self, queue_send_data: Queue, queue_notice: Queue, **kwargs):
+    def __init__(self, queue_send_data: Queue, queue_data_sent: Queue, queue_notice: Queue, **kwargs):
         super(MqttThread, self).__init__(queue_notice)
 
         self.queue_send_data = queue_send_data
+        self.queue_data_sent = queue_data_sent
         self.queue_notice = queue_notice
         self.__connected_to_mqtt = False
         self.attemp_connect = False
@@ -242,7 +257,7 @@ class MqttThread(BaseThread):
         if self.is_connected_to_mqtt():
             item = self.queue_send_data.get_nowait()
             self.send(item)
-            self.queue_send_data.task_done()
+            self.queue_data_sent.task_done()
         elif not self.attemp_connect:
             self.connect_to_mqtt()
 
@@ -271,7 +286,7 @@ class MqttThread(BaseThread):
             self.limbo.add(rc.mid, item)
         except ValueError as ex:
             logger.error("Can't sent item", ex, exc_info=True)
-            # TODO marcar item como no enviado
+            self.queue_data_sent.put_nowait(ItemQueue(item=item, status=Status.FAILED))
             pass
 
     def on_publish(self, client, userdata, mid):
@@ -286,8 +301,7 @@ class MqttThread(BaseThread):
         if self.limbo.exists(mid):
             item = self.limbo.pop(mid)
             logger.debug("Update item in db %s", item.uuid)
-            # TODO Marcar item como enviado
-#            self.db.set_sent(item.id)
+            self.queue_data_sent.put_nowait(ItemQueue(item=item, status=Status.SENT))
         else:
             logger.warning("Item isn't in limbo")
 

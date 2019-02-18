@@ -7,6 +7,7 @@ import uuid
 from decimal import *
 
 from dateutil import parser
+from enum import Enum
 
 logger = logging.getLogger(__name__)
 
@@ -111,3 +112,15 @@ class DataEncoder(json.JSONEncoder):
                     logger.error("No serialize property %s with value %s" % (name, value,))
 
         return serial
+
+
+class Status(Enum):
+    NEW = 0
+    SENT = 1
+    FAILED = 2
+
+
+class ItemQueue(object):
+    def __init__(self, item: BaseItem, **kwargs):
+        self.status = kwargs.pop("status", Status.NEW)
+        self.item = item
