@@ -29,20 +29,7 @@ class ACMPlusReader(DeviceReader):
             return measurement
 
 
-class ACMPlusWriter(DeviceWriter):
-    def __init__(self, **kwargs):
-        super(ACMPlusWriter, self).__init__(**kwargs)
-
-
-class ACMPlusSender(MqttThread):
-    def __init__(self, **kwargs):
-        super(MqttThread, self).__init__(**kwargs)
-
-
 class ACMPlus(Device):
-    def __init__(self, device_name='ACMPlus', **kwargs):
-        super(ACMPlus, self).__init__(device_name=device_name, cls_reader=ACMPlusReader, cls_writer=ACMPlusWriter,
-                                      cls_sender=ACMPlusSender, **kwargs)
-
-    def configure(self):
-        self.write("MODE")
+    def __init__(self, *args, **kwargs):
+        device_name = kwargs.pop('device_name', 'ACMPlus')
+        super(ACMPlus, self).__init__(device_name=device_name, cls_reader=ACMPlusReader, *args, **kwargs)

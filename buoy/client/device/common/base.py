@@ -29,6 +29,7 @@ class BaseThread(Thread):
         self.queue_notice = queue_notice
 
     def run(self):
+        logging.info("Start thread %s", self.__class__.__name__)
         self.before_activity()
         self.active = True
         while self.is_active():
@@ -103,6 +104,8 @@ class DeviceReader(DeviceBaseThread):
             self.error(LostConnectionException(exception=ex))
 
     def read_data(self):
+        logger.debug("Data in buffer %s" % self.buffer)
+        logger.debug("Size buffer %i" % self.device.in_waiting)
         self.buffer += self.device.read(self.device.in_waiting).decode()
 
     def is_buffer_empty(self):
