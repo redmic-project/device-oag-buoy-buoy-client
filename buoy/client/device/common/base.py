@@ -208,21 +208,21 @@ class ItemSaveThread(BaseThread):
         self.db.set_failed(item.uuid)
 
 
-class ItemInDBToSendThread(BaseThread):
+class ItemDBToSendThread(BaseThread):
     """
     Clase base encargada buscar datos en la base de datos que no han sido enviados
     """
 
-    def __init__(self, db: DeviceDB, queue_send_data: Queue, queue_notice: Queue):
-        super(ItemInDBToSendThread, self).__init__(queue_notice)
+    def __init__(self, db: DeviceDB, queue_send_data: Queue, queue_notice: Queue, **kwargs):
+        super(ItemDBToSendThread, self).__init__(queue_notice, timeout_wait=300)
 
         self.db = db
         self.queue_send_data = queue_send_data
         self.queue_notice = queue_notice
-        self.limit_queue = 100
+        self.limit_queue = kwargs.pop("limit_queue", 100)
 
     def activity(self):
-        if self.queue_send_data.qsize() < self.limit_queue:
+        if not self.queue_send_data.full():
             items = self.db.get_items_to_send()
             for item in items:
                 self.queue_send_data.put_nowait(item)
@@ -385,6 +385,7 @@ class Device(object):
         self.cls_writer = kwargs.pop('cls_writer', None)
         self.cls_save = kwargs.pop('cls_save', ItemSaveThread)
         self.cls_send = kwargs.pop('cls_send', MqttThread)
+        self.cls_reader_from_db = kwargs.pop('cls_reader_from_db', ItemDBToSendThread)
         self.mqtt = kwargs.pop('mqtt', None)
 
         self.qsize_send_data = kwargs.pop('qsize_send_data', 1000)
@@ -436,18 +437,21 @@ class Device(object):
             self._thread_save = self.cls_save(queue_save_data=self.queues['save_data'],
                                               queue_notice=self.queues['notice'],
                                               db=self.db)
+        if self.cls_reader_from_db:
+            self._thread_send = self.cls_reader_from_db(queue_send_data=self.queues['send_data'],
+                                                        queue_notice=self.queues['notice'],
+                                                        db=self.db)
         if self.cls_send:
             self._thread_send = self.cls_send(queue_send_data=self.queues['send_data'],
                                               queue_data_sent=self.queues['save_data'],
-                                              queue_notice=self.queues['notice'],
-                                              db=self.db, **self.mqtt)
+                                              queue_notice=self.queues['notice'])
 
     def _start_threads(self):
         self._run_action_threads(action='start')
 
     def _run_action_threads(self, action='start'):
         prefix = '_thread_'
-        names = ['reader', 'writer', 'save', 'send']
+        names = ['reader', 'writer', 'save', 'send', 'reader_from_db']
 
         for name in names:
             field = prefix + name

@@ -17,20 +17,21 @@ logger = logging.getLogger(__name__)
 class DeviceDB(object):
     """ Clase encargada de gestionar la base de datos """
 
-    def __init__(self, db_config, db_tablename, cls_item):
+    def __init__(self, db_config, db_tablename, cls_item, **kwargs):
 
         self.connection = None
         self.connect(db_config)
         self.tablename_data = db_tablename
         self.cls = cls_item
+        self.window_time = kwargs.pop('window_time', 300)
 
         self._insert_sql = """INSERT INTO """ + self.tablename_data + """(%s) VALUES %s RETURNING uuid"""
         self._find_by_id_sql = """SELECT * FROM """ + self.tablename_data + """ WHERE uuid = ANY(%s)"""
         self._update_status_sql = """UPDATE """ + self.tablename_data + """ SET sent=%s WHERE uuid = ANY(%s)"""
         self._select_items_to_send_sql = """SELECT * FROM """ + self.tablename_data + \
                                          """ WHERE sent IS false AND num_attempts < %s """ + \
-                                         """ AND NOT uuid = ANY(%s) AND date < now() - 30 * interval '1 second'""" + \
-                                         """ ORDER BY date LIMIT %s OFFSET %s"""
+                                         """AND date < now() - %s * interval '1 second' """ + \
+                                         """ORDER BY date LIMIT %s"""
 
     def connect(self, db_config):
         logger.debug("Connecting to database")
@@ -76,10 +77,13 @@ class DeviceDB(object):
 
         return items
 
-    def get_items_to_send(self, num_attemps: int = 3, discard: List[int] = [],
-                          size: int = 100, offset: int = 0) -> List[DictRow]:
+    def get_items_to_send(self, **kwargs) -> List[DictRow]:
 
-        return self._get_items_to_send((num_attemps, discard, size, offset))
+        window_time = kwargs.pop('window_time', 60000)
+        max_attemps = kwargs.pop('max_attemps', 3)
+        size = kwargs.pop('size', 100)
+
+        return self._get_items_to_send((max_attemps, window_time, size))
 
     def update_status(self, uuids: List, status=True):
         if len(uuids):
@@ -88,7 +92,7 @@ class DeviceDB(object):
                     sql = cur.mogrify(self._update_status_sql, (status, uuids))
                     cur.execute(sql)
                 self.connection.commit()
-            except DatabaseError as e:
+            except DatabaseError:
                 logger.exception("No update data")
 
     def set_sent(self, uuid):
