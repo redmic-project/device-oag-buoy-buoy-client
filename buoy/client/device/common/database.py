@@ -6,10 +6,11 @@ from typing import List, AnyStr
 import psycopg2
 from psycopg2 import DatabaseError, IntegrityError, errorcodes
 from psycopg2.extensions import AsIs
-from psycopg2.extras import DictCursor, DictRow
+from psycopg2.extras import DictCursor, DictRow, register_uuid
 
 from buoy.client.device.common.item import BaseItem
 
+register_uuid()
 logger = logging.getLogger(__name__)
 
 
@@ -24,7 +25,7 @@ class DeviceDB(object):
         self.cls = cls_item
 
         self._insert_sql = """INSERT INTO """ + self.tablename_data + """(%s) VALUES %s RETURNING uuid"""
-        self._find_by_id_sql = """SELECT * FROM """ + self.tablename_data + """ WHERE uuid = %s"""
+        self._find_by_id_sql = """SELECT * FROM """ + self.tablename_data + """ WHERE uuid = ANY(%s)"""
         self._update_status_sql = """UPDATE """ + self.tablename_data + """ SET sended=%s WHERE uuid = ANY(%s)"""
         self._select_items_to_send_sql = """SELECT * FROM """ + self.tablename_data + \
                                          """ WHERE sended IS false AND num_attempts < %s """ + \
@@ -45,11 +46,11 @@ class DeviceDB(object):
             self.connection.commit()
         except IntegrityError as e:
             if e.pgcode == errorcodes.UNIQUE_VIOLATION:
-                logger.warning("Inserting data already inserted")
+                logger.warning("The data exists in database yet")
             else:
-                logger.exception("No insert data")
+                logger.exception("No insert data", exc_info=e)
         except DatabaseError as e:
-            logger.exception("No insert data")
+            logger.exception("No insert data", exc_info=e)
 
         return item
 
@@ -82,10 +83,13 @@ class DeviceDB(object):
 
     def update_status(self, uuids: List, status=True):
         if len(uuids):
-            with self.get_cursor() as cur:
-                sql = cur.mogrify(self._update_status_sql, (status, uuids))
-                cur.execute(sql)
-            self.connection.commit()
+            try:
+                with self.get_cursor() as cur:
+                    sql = cur.mogrify(self._update_status_sql, (status, uuids))
+                    cur.execute(sql)
+                self.connection.commit()
+            except DatabaseError as e:
+                logger.exception("No update data")
 
     def set_sent(self, uuid):
         self.update_status([uuid], status=True)

@@ -16,7 +16,7 @@ def get_item():
         'date': datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
         'air_temp': '26.8',
         'press_inch': '30.3273',
-        'pres_bar': '1.027',
+        'pres_mbar': '1.027',
         'water_temp': '20.1',
         'rel_humidity': '12.3',
         'abs_humidity': '21.0',
@@ -46,8 +46,8 @@ class TestItemSaveThread(unittest.TestCase):
         queue_data = Queue()
         queue_notice = NoticePriorityQueue()
 
-        items = [ItemQueue(item=get_item()), ItemQueue(item=get_item(), status=Status.SENT),
-                 ItemQueue(item=get_item(), status=Status.FAILED)]
+        items = [ItemQueue(data=get_item()), ItemQueue(data=get_item(), status=Status.SENT),
+                 ItemQueue(data=get_item(), status=Status.FAILED)]
 
         for item in items:
             queue_data.put_nowait(item)
@@ -57,9 +57,9 @@ class TestItemSaveThread(unittest.TestCase):
 
         eq_(mock_is_active.call_count, 4)
         eq_(mock_save.call_count, 1)
-        eq_(mock_save.call_args, call(items[0]))
-        eq_(mock_set_sent.call_args, call(items[1]))
-        eq_(mock_set_failed.call_args, call(items[2]))
+        eq_(mock_save.call_args, call(items[0].data))
+        eq_(mock_set_sent.call_args, call(items[1].data))
+        eq_(mock_set_failed.call_args, call(items[2].data))
 
 
 if __name__ == '__main__':

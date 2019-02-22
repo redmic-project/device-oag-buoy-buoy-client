@@ -4,6 +4,7 @@ import logging
 from queue import Queue, Empty, Full
 from threading import Thread
 from typing import List
+from copy import copy
 
 import paho.mqtt.client as mqtt
 import time
@@ -12,7 +13,6 @@ from serial import Serial, SerialException
 from buoy.client.device.common.database import DeviceDB
 from buoy.client.device.common.exceptions import LostConnectionException, DeviceNoDetectedException, \
     ProcessDataExecption
-from buoy.client.internet_connection import is_connected_to_internet
 
 from buoy.client.notification.common import BaseItem
 from buoy.client.device.common.item import ItemQueue, Status
@@ -121,11 +121,11 @@ class DeviceReader(DeviceBaseThread):
         pass
 
     def put_in_queues(self, item):
-        logger.info("Item readed from device - " + str(item))
+#        logger.info("Item readed from device - %s" % item)
 
         if self.queue_save_data and not self.queue_save_data.full():
             try:
-                self.queue_save_data.put_nowait(ItemQueue(item=item))
+                self.queue_save_data.put_nowait(ItemQueue(data=copy(item)))
             except Full as ex:
                 logger.error("Save data queue is full", ex)
 
@@ -171,11 +171,13 @@ class ItemSaveThread(BaseThread):
             item = self.queue_save_data.get(timeout=self.timeout_wait)
 
             if item.status == Status.NEW:
-                self.save(item)
+                self.save(item.data)
+                # TODO Habría que tener encuenta si el item se guardó antes
             elif item.status == Status.SENT:
-                self.set_sent(item)
+                self.set_sent(item.data)
+                # TODO Habría que tener encuenta si el item no existe
             elif item.status == Status.FAILED:
-                self.set_failed(item)
+                self.set_failed(item.data)
 
             self.queue_save_data.task_done()
         except Empty:
@@ -255,9 +257,13 @@ class MqttThread(BaseThread):
 
     def activity(self):
         if self.is_connected_to_mqtt():
-            item = self.queue_send_data.get_nowait()
-            self.send(item)
-            self.queue_data_sent.task_done()
+            try:
+                item = self.queue_send_data.get_nowait()
+                self.send(item)
+                self.queue_send_data.task_done()
+            except Empty as ex:
+                logger.debug("Send queue is empty")
+                pass
         elif not self.attemp_connect:
             self.connect_to_mqtt()
 
@@ -280,13 +286,13 @@ class MqttThread(BaseThread):
 
         :param item:
         """
-        logger.info("Publish data '%s' to topic '%s'" % (self.topic_data, str(item.to_json())))
+#        logger.info("Publish data '%s' to topic '%s'" % (self.topic_data, str(item.to_json())))
         try:
             rc = self.client.publish(self.topic_data, str(item.to_json()), qos=self.qos)
             self.limbo.add(rc.mid, item)
         except ValueError as ex:
             logger.error("Can't sent item", ex, exc_info=True)
-            self.queue_data_sent.put_nowait(ItemQueue(item=item, status=Status.FAILED))
+            self.queue_data_sent.put_nowait(ItemQueue(data=item, status=Status.FAILED))
             pass
 
     def on_publish(self, client, userdata, mid):
@@ -301,7 +307,7 @@ class MqttThread(BaseThread):
         if self.limbo.exists(mid):
             item = self.limbo.pop(mid)
             logger.debug("Update item in db %s", item.uuid)
-            self.queue_data_sent.put_nowait(ItemQueue(item=item, status=Status.SENT))
+            self.queue_data_sent.put_nowait(ItemQueue(data=item, status=Status.SENT))
         else:
             logger.warning("Item isn't in limbo")
 
@@ -390,6 +396,7 @@ class Device(object):
             self.configure()
             self._listener_exceptions()
         except Exception as ex:
+            logger.error(ex)
             raise ex
 
     def connect(self):
@@ -408,14 +415,15 @@ class Device(object):
         if self.cls_reader:
             self._thread_reader = self.cls_reader(device=self._dev_connection,
                                                   queue_save_data=self.queues['save_data'],
+                                                  queue_send_data=self.queues['send_data'],
                                                   queue_notice=self.queues['notice'])
         if self.cls_save:
             self._thread_save = self.cls_save(queue_save_data=self.queues['save_data'],
-                                              queue_send_data=self.queues['send_data'],
                                               queue_notice=self.queues['notice'],
                                               db=self.db)
         if self.cls_send:
             self._thread_send = self.cls_send(queue_send_data=self.queues['send_data'],
+                                              queue_data_sent=self.queues['save_data'],
                                               queue_notice=self.queues['notice'],
                                               db=self.db, **self.mqtt)
 

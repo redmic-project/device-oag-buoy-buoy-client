@@ -17,16 +17,16 @@ class TestConsoleCLI(unittest.TestCase):
     def setUp(self):
         self.buoy_config = load_config.load_config(path_config=config_buoy_file)
 
-    @unittest.skip
+#    @unittest.skip
     def test_run_weather_station(self):
         daemon = WeatherStationDaemon(name="PB200", buoy_config=self.buoy_config)
         t = threading.Thread(target=daemon.start)
         t.start()
-        time.sleep(10000)
-        with self.assertRaises(SystemExit) as cm:
-            daemon.stop()
+#        time.sleep(10000)
+#        with self.assertRaises(SystemExit) as cm:
+#            daemon.stop()
 
-        self.assertEqual(cm.exception.code, EX_OK)
+#        self.assertEqual(cm.exception.code, EX_OK)
 
     @unittest.skip
     def test_run_current_meter(self):

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class BaseItem(object):
     def __init__(self, **kwargs):
-        self.uuid = kwargs.pop('uuid', str(uuid.uuid4()))
+        self.uuid = kwargs.pop('uuid', uuid.uuid4())
         self.date = kwargs.pop('date', datetime.now(tz=timezone.utc))
 
     @property
@@ -88,6 +88,12 @@ class BaseItem(object):
         for name in dir(self):
             line += '%s: %s | ' % (name, getattr(self, name))
 
+    def __copy__(self):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        result.__dict__.update(self.__dict__)
+        return result
+
 
 class DataEncoder(json.JSONEncoder):
     def default(self, o):
@@ -121,6 +127,6 @@ class Status(Enum):
 
 
 class ItemQueue(object):
-    def __init__(self, item: BaseItem, **kwargs):
+    def __init__(self, data: BaseItem, **kwargs):
         self.status = kwargs.pop("status", Status.NEW)
-        self.item = item
+        self.data = data

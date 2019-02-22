@@ -84,6 +84,25 @@ class TestProtocolNMEA0183(unittest.TestCase):
 
         ok_(json_expected in str(serial))
 
+    def test_wimda_serialize(self):
+        item_expected = WIMDA(**self.data)
+        serial = item_expected.to_json()
+
+        json_expected = ('"abs_humidity":{abs_humidity},'
+                         '"air_temp":{air_temp},'
+                         '"date":"{date}",'
+                         '"dew_point":{dew_point},'
+                         '"press_inch":{press_inch},'
+                         '"press_mbar":{press_mbar},'
+                         '"rel_humidity":{rel_humidity},'
+                         '"water_temp":{water_temp},'
+                         '"wind_dir_magnetic":{wind_dir_magnetic},'
+                         '"wind_dir_true":{wind_dir_true},'
+                         '"wind_knots":{wind_knots},'
+                         '"wind_meters":{wind_meters}').format(**self.data)
+
+        ok_(json_expected in str(serial))
+
     def test_wimda_deserialize(self):
         json_in = ('{"uuid": 2, "abs_humidity": 21.0, "air_temp": 26.8, "press_mbar": 1027.0,'
                    '"press_inch": 30.3273, "date": "2017-02-14 12:46:32.584366", "dew_point": 2.3,'

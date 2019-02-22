@@ -170,7 +170,7 @@ class WIMDA(BaseItem):
         self._wind_meters = self._convert_string_to_decimal(value)
 
     def __str__(self):
-        return ("Id: {id}\n"
+        return ("Uuid: {uuid}\n"
                 "Date: {date}\n"
                 "Barometric pressure: {press_inch} in - {press_bar} bar\n"
                 "Air temperature: {air_temp} ºC\n"
