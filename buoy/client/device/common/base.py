@@ -129,7 +129,7 @@ class DeviceReader(DeviceBaseThread):
         pass
 
     def put_in_queues(self, item):
-#        logger.info("Item readed from device - %s" % item)
+        logger.debug("Item readed from device - %s" % str(item))
 
         if self.queue_save_data and not self.queue_save_data.full():
             try:
@@ -268,7 +268,6 @@ class MqttThread(BaseThread):
 
     def connect_to_mqtt(self):
         logger.info("Try to connect to broker")
-        self.attemp_connect = True
         self.client.connect(host=self.broker_url, port=self.broker_port, keepalive=self.keepalive)
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
@@ -301,7 +300,7 @@ class MqttThread(BaseThread):
             rc = self.client.publish(self.topic_data, json, qos=self.qos)
             self.limbo.add(rc.mid, item)
         except ValueError as ex:
-            logger.error("Can't sent item", ex, exc_info=True)
+            logger.warning("Can't sent item", exc_info=True)
             self.queue_data_sent.put_nowait(ItemQueue(data=item, status=Status.FAILED))
             pass
 

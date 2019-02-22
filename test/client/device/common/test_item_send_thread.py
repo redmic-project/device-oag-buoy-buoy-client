@@ -1,11 +1,13 @@
 import unittest
 from datetime import datetime, timezone
 from queue import Queue
+from paho.mqtt.client import MQTT_ERR_SUCCESS
 from unittest.mock import patch, MagicMock
 
 from nose.tools import eq_, ok_
 
 from buoy.client.device.common.base import MqttThread
+from buoy.client.device.common.item import Status
 from buoy.client.device.common.database import DeviceDB
 from buoy.client.device.common.nmea0183 import WIMDA
 from buoy.client.notification.client.common import NoticePriorityQueue
@@ -42,8 +44,9 @@ class FakeDeviceDB(DeviceDB):
 
 
 class FakeReponseMQTT(object):
-    def __init__(self, rc=0):
+    def __init__(self, rc=0, mid=1):
         self.rc = rc
+        self.mid = mid
 
     def wait_for_publish(self):
         pass
@@ -143,16 +146,34 @@ class TestMqttThread(unittest.TestCase):
         ok_(thread.is_active() is True)
         eq_(thread.limbo.size(), 0)
 
-    def test_send(self):
+    def test_itemInsideLimbo_when_sendItem(self):
         thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
                             queue_notice=NoticePriorityQueue())
-        item = get_item()
+        item_expected = get_item()
+        mid = 1
 
         client = FakeMQTT()
-        client.publish = MagicMock(return_value=FakeReponseMQTT(rc={"mid": 0}))
-
-        thread.send(item)
+        client.publish = MagicMock(return_value=FakeReponseMQTT(rc=MQTT_ERR_SUCCESS, mid=mid))
+        thread.client = client
+        thread.send(item_expected)
         eq_(thread.limbo.size(), 1)
+        eq_(thread.limbo.get(mid), item_expected)
+
+    def test_limboIsEmpty_when_failedSentItem(self):
+        thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
+                            queue_notice=NoticePriorityQueue())
+        item_expected = get_item()
+
+        client = FakeMQTT()
+        client.publish = MagicMock(side_effect=ValueError('Error sent item'))
+        thread.client = client
+        thread.send(item_expected)
+
+        eq_(thread.queue_data_sent.qsize(), 1)
+        item = thread.queue_data_sent.get_nowait()
+        eq_(item_expected, item.data)
+        ok_(item.status == Status.FAILED)
+        eq_(thread.limbo.size(), 0)
 
 
 if __name__ == '__main__':

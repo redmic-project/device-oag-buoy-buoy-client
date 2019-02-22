@@ -85,3 +85,12 @@ class ACMPlusItem(BaseItem):
 
     def is_fulled(self):
         return self._vx and self._vy
+
+    def __str__(self, pretty=False):
+        return ("Uuid: {uuid}\n"
+                "Date: {date}\n"
+                "Vx: {vx} cm/s\n"
+                "Vy: {vy} cm/s\n"
+                "Speed: {speed} cm/s\n"
+                "Direction: {direction} %\n"
+                "Water temperature: {water_temp} ºC\n").format(**dict(self))

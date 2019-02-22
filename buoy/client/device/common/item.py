@@ -87,6 +87,7 @@ class BaseItem(object):
         line = ''
         for name in dir(self):
             line += '%s: %s | ' % (name, getattr(self, name))
+        return line
 
     def __copy__(self):
         cls = self.__class__

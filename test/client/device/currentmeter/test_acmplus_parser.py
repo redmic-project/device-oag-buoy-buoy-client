@@ -33,6 +33,26 @@ class TestACMPlusReader(unittest.TestCase):
             else:
                 eq_(getattr(item, key), value)
 
+    @patch('buoy.client.device.common.base.Device')
+    def test_queueSizeEqualToOne_when_parseOneItem(self, mock_device):
+        now = datetime.now(tz=timezone.utc)
+        date_format = "%H:%M:%S, %m-%d-%Y"
+        data = {
+            'date': now.strftime(date_format),
+            'vx': Decimal(-73.51),
+            'vy': Decimal(-0.61),
+            'water_temp': Decimal(24.37)
+        }
+        reader = ACMPlusReader(device=mock_device, queue_save_data=Queue(), queue_send_data=Queue(),
+                               queue_notice=Queue(), queue_exceptions=Queue())
+        buffer = "{vy}, {vx}, {date}, {water_temp}".format(**data) + reader.char_splitter
+        reader.buffer = buffer
+
+        reader.process_data()
+
+        eq_(reader.queue_save_data.qsize(), 1)
+        eq_(reader.queue_send_data.qsize(), 1)
+
     def test_convertToJson(self):
         now = datetime.now(tz=timezone.utc)
         data_expected = {

@@ -172,7 +172,7 @@ class WIMDA(BaseItem):
     def __str__(self):
         return ("Uuid: {uuid}\n"
                 "Date: {date}\n"
-                "Barometric pressure: {press_inch} in - {press_bar} bar\n"
+                "Barometric pressure: {press_inch} in - {press_mbar} mbar\n"
                 "Air temperature: {air_temp} ºC\n"
                 "Water temperature: {water_temp} ºC\n"
                 "Relative humidity: {rel_humidity} %\n"
