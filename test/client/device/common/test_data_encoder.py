@@ -5,14 +5,8 @@ from datetime import datetime, timezone
 from buoy.client.device.common.item import DataEncoder
 from buoy.client.device.common.nmea0183 import WIMDA
 
-skip_test = False
 
-
-def reverse_matching(matching):
-    return {v: k for k, v in matching.items()}
-
-
-class TestItemRedmic(unittest.TestCase):
+class TestItem(unittest.TestCase):
     def setUp(self):
         pass
 

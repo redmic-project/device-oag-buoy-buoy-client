@@ -29,10 +29,12 @@ class BaseThread(Thread):
         self.queue_notice = queue_notice
 
     def run(self):
+        self.before_activity()
         self.active = True
         while self.is_active():
             self.activity()
             time.sleep(self.timeout_wait)
+        self.after_activity()
 
     def is_active(self) -> bool:
         """
@@ -41,6 +43,12 @@ class BaseThread(Thread):
         :return: Estado del hilo
         """
         return self.active
+
+    def before_activity(self):
+        pass
+
+    def after_activity(self):
+        pass
 
     def activity(self):
         """
@@ -255,20 +263,8 @@ class MqttThread(BaseThread):
 
         self.qos = kwargs.pop("qos", 0)
 
-    def activity(self):
-        if self.is_connected_to_mqtt():
-            try:
-                item = self.queue_send_data.get_nowait()
-                self.send(item)
-                self.queue_send_data.task_done()
-            except Empty as ex:
-                logger.debug("Send queue is empty")
-                pass
-        elif not self.attemp_connect:
-            self.connect_to_mqtt()
-
-    def is_connected_to_mqtt(self):
-        return self.__connected_to_mqtt
+    def before_activity(self):
+        self.connect_to_mqtt()
 
     def connect_to_mqtt(self):
         logger.info("Try to connect to broker")
@@ -280,6 +276,19 @@ class MqttThread(BaseThread):
 
         self.thread_mqtt = Thread(target=loop, args=(self.client,))
         self.thread_mqtt.start()
+
+    def activity(self):
+        if self.is_connected_to_mqtt():
+            try:
+                item = self.queue_send_data.get_nowait()
+                self.send(item)
+                self.queue_send_data.task_done()
+            except Empty:
+                logger.debug("No data for sending to broker")
+                pass
+
+    def is_connected_to_mqtt(self):
+        return self.__connected_to_mqtt
 
     def send(self, item):
         """
@@ -294,6 +303,10 @@ class MqttThread(BaseThread):
             logger.error("Can't sent item", ex, exc_info=True)
             self.queue_data_sent.put_nowait(ItemQueue(data=item, status=Status.FAILED))
             pass
+
+    def stop(self):
+        logger.info("Disconnecting to broker")
+        self.client.disconnect()
 
     def on_publish(self, client, userdata, mid):
         """
@@ -355,10 +368,6 @@ class MqttThread(BaseThread):
             client.loop_stop()
             super().stop()
         logger.info("Disconnected to broker with result code %s" % str(rc))
-
-    def stop(self):
-        logger.info("Disconnecting to broker")
-        self.client.disconnect()
 
 
 class Device(object):

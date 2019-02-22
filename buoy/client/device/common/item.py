@@ -3,7 +3,7 @@
 import json
 import logging
 from datetime import datetime, timezone
-import uuid
+from uuid import uuid4, UUID
 from decimal import *
 
 from dateutil import parser
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class BaseItem(object):
     def __init__(self, **kwargs):
-        self.uuid = kwargs.pop('uuid', uuid.uuid4())
+        self.uuid = kwargs.pop('uuid', uuid4())
         self.date = kwargs.pop('date', datetime.now(tz=timezone.utc))
 
     @property
@@ -109,6 +109,8 @@ class DataEncoder(json.JSONEncoder):
                 serial[name] = value
             elif datatype is str:
                 serial[name] = value
+            elif datatype is UUID:
+                serial[name] = str(value)
             elif isinstance(value, BaseItem):
                 serial[name] = self.default(value)
             elif value:

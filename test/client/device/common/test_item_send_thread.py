@@ -64,14 +64,14 @@ class TestMqttThread(unittest.TestCase):
         self.qos = 1
 
     @patch.object(MqttThread, 'is_connected_to_mqtt', return_value=False)
-    @patch.object(MqttThread, 'connect_to_mqtt')
-    def test_onceCallToConnectMqtt_when_inititializeThread(self, mock_is_connected_to_mqtt, mock_connect_to_mqtt):
+    @patch.object(MqttThread, 'send')
+    def test_onceCallToConnectMqtt_when_inititializeThread(self, mock_send, mock_is_connected_to_mqtt):
         thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
                             queue_notice=NoticePriorityQueue())
         thread.activity()
 
         eq_(mock_is_connected_to_mqtt.call_count, 1)
-        eq_(mock_connect_to_mqtt.call_count, 1)
+        eq_(mock_send.call_count, 0)
 
     def test_deleteItemInLimbo_when_itemSuccessPublished(self):
         thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
