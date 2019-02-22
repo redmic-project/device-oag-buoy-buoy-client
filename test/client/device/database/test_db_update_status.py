@@ -62,7 +62,7 @@ class BaseDBUpdateStatusTests(unittest.TestCase):
         after_rows = apply_sql_clause(sql_clause)
 
         for idx, aft_row in enumerate(after_rows):
-            eq_(aft_row['sended'], True)
+            eq_(aft_row['sent'], True)
             ok_(aft_row['uuid'] == before_rows[idx]['uuid'])
             ok_(aft_row['num_attempts'] > before_rows[idx]['num_attempts'])
 

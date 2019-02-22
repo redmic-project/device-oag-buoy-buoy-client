@@ -10,7 +10,7 @@ CREATE TABLE acmplus (
     speed double precision,
     direction double precision,
     water_temp double precision,
-    sended BOOLEAN default false,
+    sent BOOLEAN default false,
     num_attempts SMALLINT default 0
 );
 
@@ -30,7 +30,7 @@ CREATE TABLE pb200 (
     wind_dir_magnetic double precision,
     wind_knots double precision,
     wind_meters double precision,
-    sended BOOLEAN default false,
+    sent BOOLEAN default false,
     num_attempts SMALLINT default 0
 );
 

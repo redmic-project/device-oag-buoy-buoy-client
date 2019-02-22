@@ -193,12 +193,15 @@ class ItemSaveThread(BaseThread):
 
     def save(self, item):
         """ Guarda el registro en la base de datos """
+        logger.debug("Save to item %s" % str(item))
         self.db.save(item)
 
     def set_sent(self, item):
+        logger.debug("Mark item with sent %s" % str(item))
         self.db.set_sent(item.uuid)
 
     def set_failed(self, item):
+        logger.debug("Mark item with send failed %s" % str(item))
         self.db.set_failed(item.uuid)
 
 

@@ -1,4 +1,4 @@
-INSERT INTO acmplus (uuid, date, vx, vy, speed, direction, water_temp, sended, num_attempts) VALUES
+INSERT INTO acmplus (uuid, date, vx, vy, speed, direction, water_temp, sent, num_attempts) VALUES
     ('ff61f569-a3dc-4c9d-8e3f-7575d1404f51', '2017-01-23 13:43:48', 19.57, 69.24, 71.9525016938258, 15.7824191508417, 24.1, false, 0),
     ('8f432242-7114-4318-9e91-9970dffeea75', '2017-01-23 13:45:39', 20.04, 68.62, 71.4864043017971, 16.2800817097405, 24.11, true, 0),
     ('47c84cd4-3ab6-4248-aa74-f181fd87c943', '2017-01-23 13:46:39', 20.18, 68.7, 71.6025306815339, 16.3696710544201, 24.11, true, 0),
@@ -23,7 +23,7 @@ INSERT INTO acmplus (uuid, date, vx, vy, speed, direction, water_temp, sended, n
 
 INSERT INTO pb200 (uuid, date, press_inch, press_mbar, air_temp,
         water_temp, rel_humidity, abs_humidity, dew_point, wind_dir_true,
-        wind_dir_magnetic, wind_knots, wind_meters, sended, num_attempts) VALUES
+        wind_dir_magnetic, wind_knots, wind_meters, sent, num_attempts) VALUES
     ('42ef6ffb-fc15-470f-9616-1f23944e94b4', '2017-02-17 07:00:01.667227', 30.3273, 1027.0, 26.8, 20.1, 12.3, 21, 2.3, 2, 128.7, 134.6, 0.3, false, 0),
     ('6975c215-ef9d-4622-a5dd-27563128ca84', '2017-02-17 07:01:02.667227', 30.3273, 1027.0, 26.8, 20.1, 12.3, 21, 2.3, 2, 128.7, 134.6, 0.3, false, 0),
     ('11b9cd91-c6f6-4291-87c6-8dfed0b6086e', '2017-02-17 07:01:04.099031', 30.3273, 1027.0, 26.8, 20.1, 12.3, 21, 2.3, 2, 128.7, 134.6, 0.3, true, 0),

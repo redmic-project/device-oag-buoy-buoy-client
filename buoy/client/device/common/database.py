@@ -26,9 +26,9 @@ class DeviceDB(object):
 
         self._insert_sql = """INSERT INTO """ + self.tablename_data + """(%s) VALUES %s RETURNING uuid"""
         self._find_by_id_sql = """SELECT * FROM """ + self.tablename_data + """ WHERE uuid = ANY(%s)"""
-        self._update_status_sql = """UPDATE """ + self.tablename_data + """ SET sended=%s WHERE uuid = ANY(%s)"""
+        self._update_status_sql = """UPDATE """ + self.tablename_data + """ SET sent=%s WHERE uuid = ANY(%s)"""
         self._select_items_to_send_sql = """SELECT * FROM """ + self.tablename_data + \
-                                         """ WHERE sended IS false AND num_attempts < %s """ + \
+                                         """ WHERE sent IS false AND num_attempts < %s """ + \
                                          """ AND NOT uuid = ANY(%s) AND date < now() - 30 * interval '1 second'""" + \
                                          """ ORDER BY date LIMIT %s OFFSET %s"""
 
