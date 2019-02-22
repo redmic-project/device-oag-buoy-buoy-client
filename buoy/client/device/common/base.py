@@ -295,9 +295,10 @@ class MqttThread(BaseThread):
 
         :param item:
         """
-#        logger.info("Publish data '%s' to topic '%s'" % (self.topic_data, str(item.to_json())))
+        json = str(item.to_json())
+        logger.info("Publish data '%s' to topic '%s'" % (self.topic_data, json))
         try:
-            rc = self.client.publish(self.topic_data, str(item.to_json()), qos=self.qos)
+            rc = self.client.publish(self.topic_data, json, qos=self.qos)
             self.limbo.add(rc.mid, item)
         except ValueError as ex:
             logger.error("Can't sent item", ex, exc_info=True)

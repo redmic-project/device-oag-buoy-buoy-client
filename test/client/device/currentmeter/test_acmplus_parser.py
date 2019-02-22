@@ -53,8 +53,14 @@ class TestACMPlusReader(unittest.TestCase):
         }
 
         json = ACMPlusItem(**data).to_json()
-        json_expected = "\"date\":\"{date}\",\"direction\":{direction},\"speed\":{speed},\"uuid\":\"{uuid}\"," \
-                        "\"vx\":{vx},\"vy\":{vy},\"water_temp\":{water_temp}".format(**data_expected)
+        json_expected = ('"date":"{date}",'
+                         '"direction":{direction},'
+                         '"speed":{speed},'
+                         '"uuid":"{uuid}",'
+                         '"vx":{vx},'
+                         '"vy":{vy},'
+                         '"water_temp":{water_temp}').format(**data_expected)
+
         ok_(json_expected in json)
 
 

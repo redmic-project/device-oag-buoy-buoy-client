@@ -2,6 +2,7 @@ import json
 import unittest
 from datetime import datetime
 from decimal import Decimal
+from uuid import  uuid4
 
 import pynmea2
 from nose.tools import eq_, ok_
@@ -12,7 +13,7 @@ from buoy.client.device.weatherstation.pb200 import WIMDA
 class TestProtocolNMEA0183(unittest.TestCase):
     def setUp(self):
         self.data = {
-            'uuid': None,
+            'uuid': uuid4(),
             'date': '2017-11-29T10:18:48.714+00:00',
             'air_temp': '26.8',
             'press_inch': '30.327',
@@ -53,6 +54,7 @@ class TestProtocolNMEA0183(unittest.TestCase):
 
         item = WIMDA.from_nmea(self.data['date'], mda)
         item.uuid = None
+        item_expected.uuid = None
 
         eq_(item, item_expected)
 
@@ -76,6 +78,7 @@ class TestProtocolNMEA0183(unittest.TestCase):
                          '"press_inch":{press_inch},'
                          '"press_mbar":{press_mbar},'
                          '"rel_humidity":{rel_humidity},'
+                         '"uuid":"{uuid}",'
                          '"water_temp":{water_temp},'
                          '"wind_dir_magnetic":{wind_dir_magnetic},'
                          '"wind_dir_true":{wind_dir_true},'
@@ -88,6 +91,8 @@ class TestProtocolNMEA0183(unittest.TestCase):
         item_expected = WIMDA(**self.data)
         serial = item_expected.to_json()
 
+        self.data['uuid'] = item_expected.uuid
+
         json_expected = ('"abs_humidity":{abs_humidity},'
                          '"air_temp":{air_temp},'
                          '"date":"{date}",'
@@ -95,6 +100,7 @@ class TestProtocolNMEA0183(unittest.TestCase):
                          '"press_inch":{press_inch},'
                          '"press_mbar":{press_mbar},'
                          '"rel_humidity":{rel_humidity},'
+                         '"uuid":"{uuid}",'
                          '"water_temp":{water_temp},'
                          '"wind_dir_magnetic":{wind_dir_magnetic},'
                          '"wind_dir_true":{wind_dir_true},'
