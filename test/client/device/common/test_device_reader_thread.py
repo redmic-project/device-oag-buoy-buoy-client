@@ -1,5 +1,5 @@
 import unittest
-from queue import Queue
+from queue import Queue, Full
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
@@ -7,6 +7,7 @@ from nose.tools import eq_
 from serial import SerialException
 
 from buoy.client.device.common.base import DeviceReader
+from buoy.client.device.common.item import BaseItem
 from buoy.client.device.common.exceptions import ProcessDataExecption
 
 serial_config = {
@@ -32,9 +33,10 @@ class DeviceReaderMock(DeviceReader):
 class TestItemReaderThread(unittest.TestCase):
     def setUp(self):
         self.queue_save_data = Queue()
+        self.queue_send_data = Queue()
         self.queue_notice = Queue()
-        self.thread = DeviceReaderMock(queue_save_data=self.queue_save_data, queue_notice=self.queue_notice,
-                                       device=device)
+        self.thread = DeviceReaderMock(queue_save_data=self.queue_save_data, queue_send_data=self.queue_send_data,
+                                       queue_notice=self.queue_notice, device=device)
 
     def test_returnTwoItems_when_passStringWith3CarriageReturnAndWhiteSpace(self):
         text = """hola
@@ -115,6 +117,16 @@ class TestItemReaderThread(unittest.TestCase):
         self.thread.buffer = text
 
         self.assertRaises(ProcessDataExecption, self.thread.process_data)
+
+    def test_raiseException_when_queuesIsFull(self):
+        self.queue_save_data.put_nowait = MagicMock(side_effect=Full())
+        self.queue_send_data.put_nowait = MagicMock(side_effect=Full())
+        item = BaseItem()
+
+        self.thread.put_in_queues(item)
+
+        eq_(self.queue_save_data.qsize(), 0)
+        eq_(self.queue_send_data.qsize(), 0)
 
 
 if __name__ == '__main__':

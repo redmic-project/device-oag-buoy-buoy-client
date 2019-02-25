@@ -104,7 +104,6 @@ class DeviceReader(DeviceBaseThread):
 
     def read_data(self):
         logger.debug("Data in buffer %s" % self.buffer)
-        logger.debug("Size buffer %i" % self.device.in_waiting)
         self.buffer += self.device.read(self.device.in_waiting).decode()
 
     def is_buffer_empty(self):
@@ -130,20 +129,20 @@ class DeviceReader(DeviceBaseThread):
     def parser(self, data) -> BaseItem:
         pass
 
-    def put_in_queues(self, item):
+    def put_in_queues(self, item: BaseItem):
         logger.debug("Item readed from device - %s" % str(item))
 
         if self.queue_save_data and not self.queue_save_data.full():
             try:
                 self.queue_save_data.put_nowait(ItemQueue(data=copy(item)))
-            except Full as ex:
-                logger.error("Save data queue is full", ex)
+            except Full:
+                logger.error("Save data queue is full")
 
         if self.queue_send_data and not self.queue_send_data.full():
             try:
                 self.queue_send_data.put_nowait(item)
-            except Full as ex:
-                logger.warning("Send data queue is full", ex)
+            except Full:
+                logger.warning("Send data queue is full")
 
 
 class DeviceWriter(DeviceBaseThread):

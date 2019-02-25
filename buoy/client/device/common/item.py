@@ -84,10 +84,8 @@ class BaseItem(object):
             return self.date < other.date
 
     def __str__(self):
-        line = ''
-        for name in dir(self):
-            line += '%s: %s | ' % (name, getattr(self, name))
-        return line
+        return ("Uuid: {uuid}\n"
+                "Date: {date}\n").format(**dict(self))
 
     def __copy__(self):
         cls = self.__class__
