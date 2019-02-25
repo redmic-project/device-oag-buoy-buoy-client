@@ -14,8 +14,7 @@ from buoy.client.device.common.database import DeviceDB
 from buoy.client.device.common.exceptions import LostConnectionException, DeviceNoDetectedException, \
     ProcessDataExecption
 
-from buoy.client.notification.common import BaseItem
-from buoy.client.device.common.item import ItemQueue, Status
+from buoy.client.device.common.item import ItemQueue, Status, BaseItem
 from buoy.client.device.common.limbo import Limbo
 
 logger = logging.getLogger(__name__)
