@@ -10,7 +10,6 @@ from buoy.client.device.common.base import MqttThread
 from buoy.client.device.common.item import Status
 from buoy.client.device.common.database import DeviceDB
 from buoy.client.device.common.nmea0183 import WIMDA
-from buoy.client.notification.client.common import NoticePriorityQueue
 
 
 def get_item():
@@ -65,115 +64,92 @@ class TestMqttThread(unittest.TestCase):
         self.cls = WIMDA
         self.topic = "redmic/data"
         self.qos = 1
+        self.thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
+                                 queue_notice=Queue())
+
+    def fill_limbo(self, size):
+        items = get_items(size)
+        for idx, item in enumerate(items):
+            self.thread.limbo.add(idx, item)
 
     @patch.object(MqttThread, 'is_connected_to_mqtt', return_value=False)
     @patch.object(MqttThread, 'send')
     def test_onceCallToConnectMqtt_when_inititializeThread(self, mock_send, mock_is_connected_to_mqtt):
-        thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
-                            queue_notice=NoticePriorityQueue())
-        thread.activity()
+        self.thread.activity()
 
         eq_(mock_is_connected_to_mqtt.call_count, 1)
         eq_(mock_send.call_count, 0)
 
     def test_deleteItemInLimbo_when_itemSuccessPublished(self):
-        thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
-                            queue_notice=NoticePriorityQueue())
-        items = get_items(2)
-        for idx, item in enumerate(items):
-            thread.limbo.add(idx, item)
+        self.fill_limbo(size=2)
 
-        thread.on_publish(None, None, 1)
+        self.thread.on_publish(None, None, 1)
 
-        eq_(thread.limbo.size(), 1)
-        ok_(thread.limbo.get(1) is None)
+        eq_(self.thread.limbo.size(), 1)
+        ok_(self.thread.limbo.get(1) is None)
 
     def test_isConnectIsTrue_when_onConnectCallbackReceiveRCEqualZero(self):
-        thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
-                            queue_notice=NoticePriorityQueue())
-        items = get_items(2)
-        for idx, item in enumerate(items):
-            thread.limbo.add(idx, item)
+        self.fill_limbo(size=2)
 
-        thread.on_connect(None, None, flags={"session present": 1}, rc=0)
-        ok_(thread.is_connected_to_mqtt())
+        self.thread.on_connect(None, None, flags={"session present": 1}, rc=0)
+
+        ok_(self.thread.is_connected_to_mqtt())
 
     def test_isConnectIsFalse_when_onConnectCallbackReceiveRcDistinctZero(self):
-        thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
-                            queue_notice=NoticePriorityQueue())
-        items = get_items(2)
+        self.fill_limbo(size=2)
 
-        for idx, item in enumerate(items):
-            thread.limbo.add(idx, item)
+        self.thread.on_connect(None, None, None, rc=1)
 
-        rc = 1
-
-        thread.on_connect(None, None, None, rc)
-        ok_(thread.is_connected_to_mqtt() is False)
+        ok_(self.thread.is_connected_to_mqtt() is False)
 
     def test_clearLimboAndStopThread_when_disconnectMqttOk(self):
-        thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
-                            queue_notice=NoticePriorityQueue())
-        items = get_items(2)
-
-        thread.active = True
-
-        for idx, item in enumerate(items):
-            thread.limbo.add(idx, item)
-
+        self.fill_limbo(size=2)
+        self.thread.active = True
         client = FakeMQTT()
         client.loop_stop = MagicMock()
 
-        thread.on_disconnect(client, None, 0)
-        ok_(thread.is_connected_to_mqtt() is False)
-        ok_(thread.is_active() is False)
-        eq_(thread.limbo.size(), 0)
+        self.thread.on_disconnect(client, None, 0)
+
+        ok_(self.thread.is_connected_to_mqtt() is False)
+        ok_(self.thread.is_active() is False)
+        eq_(self.thread.limbo.size(), 0)
 
     def test_clearLimboAndDontStopThread_when_disconnectMqttKO(self):
-        thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
-                            queue_notice=NoticePriorityQueue())
-        items = get_items(2)
-
-        thread.active = True
-
-        for idx, item in enumerate(items):
-            thread.limbo.add(idx, item)
-
+        self.fill_limbo(size=2)
+        self.thread.active = True
         client = FakeMQTT()
 
-        thread.on_disconnect(client, None, 1)
-        ok_(thread.is_connected_to_mqtt() is False)
-        ok_(thread.is_active() is True)
-        eq_(thread.limbo.size(), 0)
+        self.thread.on_disconnect(client, None, 1)
+
+        ok_(self.thread.is_connected_to_mqtt() is False)
+        ok_(self.thread.is_active() is True)
+        eq_(self.thread.limbo.size(), 0)
 
     def test_itemInsideLimbo_when_sendItem(self):
-        thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
-                            queue_notice=NoticePriorityQueue())
         item_expected = get_item()
         mid = 1
-
         client = FakeMQTT()
-        client.publish = MagicMock(return_value=FakeReponseMQTT(rc=MQTT_ERR_SUCCESS, mid=mid))
-        thread.client = client
-        thread.send(item_expected)
-        eq_(thread.limbo.size(), 1)
-        eq_(thread.limbo.get(mid), item_expected)
+        client.publish = MagicMock(return_value=FakeReponseMQTT(rc=MQTT_ERR_SUCCESS, mid=1))
+        self.thread.client = client
+
+        self.thread.send(item_expected)
+
+        eq_(self.thread.limbo.size(), 1)
+        eq_(self.thread.limbo.get(mid), item_expected)
 
     def test_limboIsEmpty_when_failedSentItem(self):
-        thread = MqttThread(db=FakeDeviceDB(), queue_send_data=Queue(), queue_data_sent=Queue(),
-                            queue_notice=NoticePriorityQueue())
         item_expected = get_item()
-
         client = FakeMQTT()
         client.publish = MagicMock(side_effect=ValueError('Error sent item'))
-        thread.client = client
-        thread.send(item_expected)
+        self.thread.client = client
 
-        eq_(thread.queue_data_sent.qsize(), 1)
-        item = thread.queue_data_sent.get_nowait()
+        self.thread.send(item_expected)
+
+        eq_(self.thread.queue_data_sent.qsize(), 1)
+        item = self.thread.queue_data_sent.get_nowait()
         eq_(item_expected, item.data)
         ok_(item.status == Status.FAILED)
-        eq_(thread.limbo.size(), 0)
+        eq_(self.thread.limbo.size(), 0)
 
 
 if __name__ == '__main__':

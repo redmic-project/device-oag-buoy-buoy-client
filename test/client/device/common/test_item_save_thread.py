@@ -8,7 +8,6 @@ from nose.tools import eq_
 from buoy.client.device.common.item import ItemQueue, Status
 from buoy.client.device.common.base import ItemSaveThread
 from buoy.client.device.common.nmea0183 import WIMDA
-from buoy.client.notification.client.common import NoticePriorityQueue
 
 
 def get_item():
@@ -44,7 +43,7 @@ class TestItemSaveThread(unittest.TestCase):
     def test_callActionDb_when_insertItemsWithVariousStatusInQueueData(self, mock_is_active, mock_set_failed,
                                                                        mock_set_sent, mock_save):
         queue_data = Queue()
-        queue_notice = NoticePriorityQueue()
+        queue_notice = Queue()
 
         items = [ItemQueue(data=get_item()), ItemQueue(data=get_item(), status=Status.SENT),
                  ItemQueue(data=get_item(), status=Status.FAILED)]

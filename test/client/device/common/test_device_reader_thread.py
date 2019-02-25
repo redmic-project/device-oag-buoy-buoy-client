@@ -8,7 +8,6 @@ from serial import SerialException
 
 from buoy.client.device.common.base import DeviceReader
 from buoy.client.device.common.exceptions import ProcessDataExecption
-from buoy.client.notification.client.common import NoticePriorityQueue
 
 serial_config = {
     'port': '/dev/weather_station',
@@ -33,7 +32,7 @@ class DeviceReaderMock(DeviceReader):
 class TestItemReaderThread(unittest.TestCase):
     def setUp(self):
         self.queue_save_data = Queue()
-        self.queue_notice = NoticePriorityQueue()
+        self.queue_notice = Queue()
         self.thread = DeviceReaderMock(queue_save_data=self.queue_save_data, queue_notice=self.queue_notice,
                                        device=device)
 

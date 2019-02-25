@@ -1,14 +1,14 @@
 import unittest
 
 from nose.tools import eq_
+from queue import Queue
 
 from buoy.client.device.common.base import BaseThread
-from buoy.client.notification.client.common import NoticePriorityQueue
 
 
 class TestThreadBase(unittest.TestCase):
     def setUp(self):
-        queue_notice = NoticePriorityQueue()
+        queue_notice = Queue()
         self.thread = BaseThread(queue_notice=queue_notice)
 
     def test_is_aliveReturnFalse_when_createThread(self):
