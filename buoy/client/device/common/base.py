@@ -214,7 +214,8 @@ class ItemDBToSendThread(BaseThread):
     """
 
     def __init__(self, db: DeviceDB, queue_send_data: Queue, queue_notice: Queue, **kwargs):
-        super(ItemDBToSendThread, self).__init__(queue_notice, timeout_wait=300)
+        super(ItemDBToSendThread, self).__init__(queue_notice,
+                                                 timeout_wait=kwargs.pop('timeout_wait', 300))
 
         self.db = db
         self.queue_send_data = queue_send_data

@@ -79,7 +79,7 @@ class DeviceDB(object):
 
     def get_items_to_send(self, **kwargs) -> List[DictRow]:
 
-        window_time = kwargs.pop('window_time', 60000)
+        window_time = kwargs.pop('window_time', 900)
         max_attemps = kwargs.pop('max_attemps', 3)
         size = kwargs.pop('size', 100)
 
