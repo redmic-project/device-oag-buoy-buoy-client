@@ -224,7 +224,11 @@ class ItemDBToSendThread(BaseThread):
         if not self.queue_send_data.full():
             items = self.db.get_items_to_send()
             for item in items:
-                self.queue_send_data.put_nowait(item)
+                try:
+                    self.queue_send_data.put_nowait(item)
+                except Full:
+                    logger.warning("Send queue is full")
+                    break
 
 
 def loop(client):
