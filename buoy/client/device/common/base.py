@@ -6,7 +6,7 @@ from threading import Thread
 from typing import List
 from copy import copy
 
-import paho.mqtt.client as mqtt
+from buoy.client.device.common.mqtt import MqttClient
 import time
 from serial import Serial, SerialException
 
@@ -252,7 +252,7 @@ class MqttThread(BaseThread):
 
         self.client_id = kwargs.pop("client_id", "")
         self.clean_session = kwargs.pop("clean_session", True)
-        self.protocol = mqtt.MQTTv311
+        self.protocol = MqttClient.MQTTv311
         self.transport = kwargs.pop("transport", "tcp")
 
         self.broker_url = kwargs.pop("broker_url", "iot.eclipse.org")
@@ -261,7 +261,7 @@ class MqttThread(BaseThread):
         self.keepalive = kwargs.pop("keepalive", 60)
         self.reconnect_delay = kwargs.pop("reconnect_delay", {"min_delay": 1, "max_delay": 120})
 
-        self.client = mqtt.Client(client_id=self.client_id, protocol=self.protocol, clean_session=self.clean_session)
+        self.client = MqttClient(client_id=self.client_id, protocol=self.protocol, clean_session=self.clean_session)
 
         self.limbo = Limbo()
 
@@ -306,9 +306,9 @@ class MqttThread(BaseThread):
         json = str(item.to_json())
         logger.info("Publish data '%s' to topic '%s'" % (self.topic_data, json))
         try:
-            rc = self.client.publish(self.topic_data, json, qos=self.qos)
-            self.limbo.add(rc.mid, item)
-        except ValueError as ex:
+            self.limbo.add(item.uuid, item)
+            rc = self.client.publish(self.topic_data, json, qos=self.qos, mid=item.uuid)
+        except ValueError:
             logger.warning("Can't sent item", exc_info=True)
             self.queue_data_sent.put_nowait(ItemQueue(data=item, status=Status.FAILED))
             pass
