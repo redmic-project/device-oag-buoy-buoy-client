@@ -307,7 +307,7 @@ class MqttThread(BaseThread):
         logger.info("Publish data '%s' to topic '%s'" % (self.topic_data, json))
         try:
             self.limbo.add(item.uuid, item)
-            rc = self.client.publish(self.topic_data, json, qos=self.qos, mid=item.uuid)
+            self.client.publish(self.topic_data, json, qos=self.qos, mid=item.uuid)
         except ValueError:
             logger.warning("Can't sent item", exc_info=True)
             self.limbo.pop(item.uuid)

@@ -1,14 +1,14 @@
 import unittest
 from datetime import datetime, timezone
 from queue import Queue
-from buoy.client.device.common.mqtt import MQTT_ERR_SUCCESS
 from unittest.mock import patch, MagicMock
 
 from nose.tools import eq_, ok_
 
 from buoy.client.device.common.base import MqttThread
-from buoy.client.device.common.item import Status
 from buoy.client.device.common.database import DeviceDB
+from buoy.client.device.common.item import Status
+from buoy.client.device.common.mqtt import MQTT_ERR_SUCCESS
 from buoy.client.device.common.nmea0183 import WIMDA
 
 
