@@ -6,7 +6,7 @@ from threading import Thread
 from typing import List
 from copy import copy
 
-from buoy.client.device.common.mqtt import MqttClient
+from buoy.client.device.common.mqtt import MqttClient, MQTTv311
 import time
 from serial import Serial, SerialException
 
@@ -252,7 +252,7 @@ class MqttThread(BaseThread):
 
         self.client_id = kwargs.pop("client_id", "")
         self.clean_session = kwargs.pop("clean_session", True)
-        self.protocol = MqttClient.MQTTv311
+        self.protocol = MQTTv311
         self.transport = kwargs.pop("transport", "tcp")
 
         self.broker_url = kwargs.pop("broker_url", "iot.eclipse.org")
