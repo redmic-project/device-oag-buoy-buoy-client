@@ -310,6 +310,7 @@ class MqttThread(BaseThread):
             rc = self.client.publish(self.topic_data, json, qos=self.qos, mid=item.uuid)
         except ValueError:
             logger.warning("Can't sent item", exc_info=True)
+            self.limbo.pop(item.uuid)
             self.queue_data_sent.put_nowait(ItemQueue(data=item, status=Status.FAILED))
             pass
 

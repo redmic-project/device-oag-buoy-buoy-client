@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, timezone
 from queue import Queue
-from paho.mqtt.client import MQTT_ERR_SUCCESS
+from buoy.client.device.common.mqtt import MQTT_ERR_SUCCESS
 from unittest.mock import patch, MagicMock
 
 from nose.tools import eq_, ok_
@@ -127,9 +127,9 @@ class TestMqttThread(unittest.TestCase):
 
     def test_itemInsideLimbo_when_sendItem(self):
         item_expected = get_item()
-        mid = 1
+        mid = item_expected.uuid
         client = FakeMQTT()
-        client.publish = MagicMock(return_value=FakeReponseMQTT(rc=MQTT_ERR_SUCCESS, mid=1))
+        client.publish = MagicMock(return_value=FakeReponseMQTT(rc=MQTT_ERR_SUCCESS, mid=mid))
         self.thread.client = client
 
         self.thread.send(item_expected)

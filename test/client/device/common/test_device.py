@@ -1,9 +1,8 @@
 import unittest
 from unittest.mock import patch
+from buoy.client.device.common.base import Device, DeviceNoDetectedException
 
 from serial import SerialException
-
-from buoy.client.device.common.base import Device, DeviceNoDetectedException
 
 
 class TestDevice(unittest.TestCase):
