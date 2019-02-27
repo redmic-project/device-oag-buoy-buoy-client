@@ -31,7 +31,7 @@ def get_items(num=2):
     return items
 
 
-class TestMqttThread(unittest.TestCase):
+class TestLimbo(unittest.TestCase):
 
     def test_itemAdded_when_callAddItemLimbo(self):
         limbo = Limbo()

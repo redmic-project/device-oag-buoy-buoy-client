@@ -1,9 +1,16 @@
+# -*- coding: utf-8 -*-
+
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class Limbo(object):
     def __init__(self):
         self.items = dict()
 
     def add(self, id, item):
+        logger.debug("Add item %s with id %s to limbo" % (item, id,))
         self.items[id] = item
 
     def clear(self):
@@ -18,6 +25,7 @@ class Limbo(object):
         item = self.get(id)
         if item:
             del self.items[id]
+        logger.debug("Remove item %s with id %s to limbo" % (item, id,))
         return item
 
     def size(self):
