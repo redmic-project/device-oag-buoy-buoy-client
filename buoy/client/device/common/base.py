@@ -448,7 +448,8 @@ class Device(object):
         if self.cls_send:
             self._thread_send = self.cls_send(queue_send_data=self.queues['send_data'],
                                               queue_data_sent=self.queues['save_data'],
-                                              queue_notice=self.queues['notice'])
+                                              queue_notice=self.queues['notice'],
+                                              mqtt=self.mqtt)
 
     def _start_threads(self):
         self._run_action_threads(action='start')
