@@ -1,0 +1,11 @@
+[Unit]
+Description=Vuelca datos de pb200 del dí­a anterior
+After=postgresql.service
+
+[Service]
+User=boya
+Environment=\
+	dbName=boyadb \
+	dbTable=pb200 \
+	mountPath=/mnt/externo
+ExecStart=/home/boya/sh/export-csv.sh

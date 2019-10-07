@@ -1,0 +1,11 @@
+[Unit]
+Description=Vuelca datos de acmplus del día anterior
+After=postgresql.service
+
+[Service]
+User=boya
+Environment=\
+	dbName=boyadb \
+	dbTable=acmplus \
+	mountPath=/mnt/externo
+ExecStart=/home/boya/sh/export-csv.sh
