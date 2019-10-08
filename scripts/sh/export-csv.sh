@@ -9,4 +9,4 @@ outputPath="${mountPath}/csv/${dbTable}/${currYear}/${currMonth}"
 
 mkdir -p "${outputPath}"
 
-echo "\\\copy (select * from ${dbTable} where ${dbTable}.date >= date '${currDate}' - interval '48 hour' and ${dbTable}.date < date '${currDate}' - interval '24 hour') to '${outputPath}/${dbTable}-${currDate}.csv' with csv header" | psql ${dbName}
+echo "\\\copy (select * from ${dbTable} where ${dbTable}.date >= date '${currDate}' - interval '24 hour' and ${dbTable}.date < date '${currDate}') to '${outputPath}/${dbTable}-${currDate}.csv' with csv header" | psql ${dbName}
