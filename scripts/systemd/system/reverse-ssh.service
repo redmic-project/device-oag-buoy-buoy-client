@@ -4,8 +4,8 @@ After=network.target sys-subsystem-net-devices-usb0.device
 
 [Service]
 User=boya
-Environment=RSSH_USER=redmic RSSH_HOST=213.0.110.83 RSSH_REMOTE_PORT=8123 RSSH_LOCAL_PORT=22
-ExecStart=/usr/bin/ssh -R ${RSSH_REMOTE_PORT}:localhost:${RSSH_LOCAL_PORT} -o "ServerAliveInterval 150" -o "ServerAliveCountMax 1" -o "UserKnownHostsFile /dev/null" -o "StrictHostKeyChecking no" -o "ExitOnForwardFailure yes" -NC ${RSSH_USER}@${RSSH_HOST}
+Environment=RSSH_USER=redmic RSSH_HOST=oag-fundacion.org RSSH_PORT=2224 RSSH_REMOTE_PORT=8123 RSSH_LOCAL_PORT=22
+ExecStart=/usr/bin/ssh -R ${RSSH_REMOTE_PORT}:localhost:${RSSH_LOCAL_PORT} -o "ServerAliveInterval 150" -o "ServerAliveCountMax 1" -o "UserKnownHostsFile /dev/null" -o "StrictHostKeyChecking no" -o "ExitOnForwardFailure yes" -NC ${RSSH_USER}@${RSSH_HOST} -p ${RSSH_PORT}
 Restart=always
 RestartSec=30
 
